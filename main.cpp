@@ -3,8 +3,13 @@
 #include <vector>
 #include <memory>
 
-using namespace std;
+#include "conveyor.h"
 
+
+using namespace std;
+using namespace  flyflow;
+
+Conveyor conv;
 
 class GN
 {
@@ -254,42 +259,7 @@ public:
 
 
 
-class Frame
-{
-public:
-    std::vector<cv::Mat> pyramid;
-    Frame(const cv::Mat & frame, int count = 5)
-    {
-        pyramid.resize(count);
-        int t = frame.type() & CV_MAT_DEPTH_MASK;
-        if(t == CV_8U)
-            frame.copyTo(pyramid[0]);
-        else
-            cv::cvtColor(frame, pyramid[0], CV_BGR2GRAY);
-        pyramid[0] -= 90;
-        pyramid[0] *= 3;
-        int w = pyramid[0].cols, h = pyramid[0].rows;
 
-        for(int l = 1; l < count; l++)
-        {
-            pyramid[l] = cv::Mat(h >> 1, w >> 1, CV_8U);
-            uint8_t * dst = pyramid[l].data;//, * end = dst + ((w * h) >> 2) - 1;
-            const uint8_t * src = pyramid[l - 1].data;
-            for(int y = (h >> 1); y--;)
-            {
-                for(int x = (w >> 1); x--;)
-                {
-                    *(dst++) = (src[0] + src[1] + src[w] + src[w + 1]) >> 2;
-                    src += 2;
-                }
-                src += w;
-            }
-            //assert(src == pyramid[l - 1].data + w * h);
-            w >>= 1;
-            h >>= 1;
-        }
-    }
-};
 
 #ifdef USE_ROS
 
@@ -308,6 +278,7 @@ cv::Point trans(cv::Mat t, int x, int y)
     return cv::Point(v.at<double>(0, 0), v.at<double>(1, 0));
 }
 
+
 void onImage(const sensor_msgs::ImageConstPtr & msg)
 {
     cv_bridge::CvImagePtr cv_ptr;
@@ -324,8 +295,8 @@ void onImage(const sensor_msgs::ImageConstPtr & msg)
     cv::Mat tim = cv_ptr->image, image = tim(cv::Rect(0, 0, tim.rows, 320));
 
 
-    std::unique_ptr<Frame> f(new Frame(image, 7));
-    static std::unique_ptr<Frame> prev;
+    /*std::unique_ptr<JacobiFrame> f(new JacobiFrame(image, 7));
+    static std::unique_ptr<JacobiFrame> prev;
     static cv::Mat traj(480, 640, CV_8UC3, cv::Scalar(255, 255, 255));
     static cv::Point oldPt(0, 0);
     static cv::Mat tr = cv::Mat::eye(2, 2, CV_64F), ps = cv::Mat::zeros(2, 1, CV_64F);
@@ -389,7 +360,7 @@ void onImage(const sensor_msgs::ImageConstPtr & msg)
     if(updPrev)
     {
         prev = std::move(f);
-    }
+    }*/
 
 }
 

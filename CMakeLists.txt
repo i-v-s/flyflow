@@ -29,6 +29,8 @@ endif()
 
 
 set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -std=c++11")
-aux_source_directory(. SRC_LIST)
-add_executable(${PROJECT_NAME} ${SRC_LIST})
-target_link_libraries(${PROJECT_NAME} ${OpenCV_LIBS} ${catkin_LIBRARIES})
+add_executable(flyflow main.cpp conveyor.cpp frame.cpp jacobi.cpp)
+target_link_libraries(flyflow ${OpenCV_LIBS} ${catkin_LIBRARIES})
+
+add_executable(flyflow_test test.cpp conveyor.cpp frame.cpp jacobi.cpp)
+target_link_libraries(flyflow_test gtest ${OpenCV_LIBS} ${catkin_LIBRARIES})
