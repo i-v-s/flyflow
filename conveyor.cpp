@@ -41,7 +41,7 @@ double Conveyor::solveLevel(const cv::Mat & f0, const cv::Mat & f1, cv::Mat & ou
     //std::vector<cv::Mat> v = {f0, f1, f1};
     //cv::merge(v, out);
 
-    int h = f0.rows, w = f0.cols;
+    /*int h = f0.rows, w = f0.cols;
     cv::Mat whiteBox(f0.rows, f0.cols, CV_8U, cv::Scalar(100)), mask;
     double e = 1E10;
     cv::Mat optT = t_.clone();
@@ -78,7 +78,7 @@ double Conveyor::solveLevel(const cv::Mat & f0, const cv::Mat & f1, cv::Mat & ou
         e = te;
         t_ += du * step;
     }
-    return true;
+    return true;*/
 }
 
 double Conveyor::solve(const Frame &f0, const Frame &f1, cv::Mat &pose)

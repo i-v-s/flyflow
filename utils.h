@@ -45,7 +45,47 @@ template<class Ts, class Td = Ts> void mulByY(const cv::Mat & src, cv::Mat & dst
             *(d++) = (*(s++) * y);// / ((h >> 4) + 1);
 }
 
-template<class T1, class T2 = T1> static inline double scalMul(const cv::Mat & m1, const cv::Mat & m2)
+enum GMux { muxXX, muxXY, muxYY};
+
+template<class T, bool mulx, bool muly> double gradQuad(const cv::Mat & m)
+{
+    double sum = 0;
+    const T * p = (const T *) m.data;
+    for(int y = 0, h = m.rows, w = m.cols; y < h; y++)
+        for(int x = 0; x < w; x++)
+        {
+            double r = *(p++);
+            r *= r;
+            if(mulx) r *= x;
+            if(muly) r *= y;
+            sum += r;
+        }
+    return sum;
+}
+
+template<class T1, class T2, GMux mux, bool mulx, bool muly> double gradMul(const cv::Mat & m1, const cv::Mat & m2)
+{
+    assert(mux != muxXY || (m1.rows == m2.rows && m2.cols == m2.cols));
+    if(mux == muxXX) return gradQuad<T1, mulx, muly>(m1);
+    if(mux == muxYY) return gradQuad<T2, mulx, muly>(m2);
+    double sum = 0;
+    const T1 * p1 = (const T1 *) m1.data;
+    const T2 * p2 = (const T2 *) m2.data;
+
+    for(int y = 0, h = m1.rows, w = m1.cols; y < h; y++)
+        for(int x = 0; x < w; x++)
+        {
+            double r = (double) *(p1++) * (double) *(p2++);
+            if(mulx) r *= x;
+            if(muly) r *= y;
+            sum += r;
+        }
+    return sum;
+
+}
+
+
+template<class T1, class T2 = T1> double scalMul(const cv::Mat & m1, const cv::Mat & m2)
 {
     assert(m1.rows == m2.rows && m2.cols == m2.cols);
     double sum = 0;
@@ -55,6 +95,7 @@ template<class T1, class T2 = T1> static inline double scalMul(const cv::Mat & m
         sum += double(*a) * double(*b);
     return sum;
 }
+
 
 }
 #endif // UTILS_H

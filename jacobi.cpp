@@ -1,5 +1,4 @@
 #include "jacobi.h"
-#include "utils.h"
 #include <gtest/gtest.h>
 
 namespace flyflow
@@ -18,7 +17,13 @@ JacobiLevel::JacobiLevel(int w, int h, int level):
     gyy_ = cv::Mat(h, w, cv_scalar);
 }
 
+TEST(JacobiTest, Simple)
+{
+    JacobiT<int32_t, true, false, false, true, false, false> shiftJacobi;
 
+
+
+}
 
 void JacobiLevel::set(const cv::Mat &f1)
 {
