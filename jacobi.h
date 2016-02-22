@@ -6,15 +6,10 @@
 #include "utils.h"
 #include <eigen3/Eigen/Core>
 #include <eigen3/Eigen/Dense>
+#include <iostream>
 
 namespace flyflow
 {
-
-template<class T> constexpr int cv_type();
-template<> constexpr int cv_type<uint16_t>() {return CV_16U;}
-template<> constexpr int cv_type<int16_t>() {return CV_16S;}
-template<> constexpr int cv_type<int32_t>() {return CV_32S;}
-
 
 template<class T, bool usegxx = false, bool usegxy = false, bool usegx = true,
                   bool usegyx = false, bool usegyy = false, bool usegy = true>
@@ -61,6 +56,7 @@ private:
     {
         assert(!usegx || (e.rows == gx_.rows && e.cols == gx_.cols));
         assert(!usegy || (e.rows == gy_.rows && e.cols == gy_.cols));
+        //std::cout << "cv_type<Te>() = " << cv_type<Te>() << "; e.type() = " << e.type() << std::endl;
         assert(cv_type<Te>() == e.type());
         b.setZero();
         const T * p1, * p2;
@@ -114,12 +110,12 @@ public:
     {
         if(usegx)
         {
-            if(gx_.empty()) gx_ = cv::Mat(p.gx_.cols, p.gx_.rows, cv_type<T>());
+            if(gx_.empty()) gx_ = cv::Mat(p.gx_.rows / 2, p.gx_.cols / 2, cv_type<T>());
             flyflow::shrink<T>(p.gx_, gx_);
         }
         if(usegy)
         {
-            if(gy_.empty()) gy_ = cv::Mat(p.gy_.cols, p.gy_.rows, cv_type<T>());
+            if(gy_.empty()) gy_ = cv::Mat(p.gy_.rows / 2, p.gy_.cols / 2, cv_type<T>());
             flyflow::shrink<T>(p.gy_, gy_);
         }
         calcA();
@@ -128,13 +124,13 @@ public:
     {
         Vector b;
         calcB<Te>(b, e);
-        r = b * invA_;
+        r = invA_ * b;
     }
     template<class Te> void solve(const cv::Mat & e, cv::Mat & dt) const
     {
         assert(dt.rows == 2 && dt.cols == 3 && dt.type() == CV_64F);
         Vector v;
-        solve(e, v);
+        solve<Te>(e, v);
         const double * pv = v.data();
         double * pd = (double *) dt.data;
         *(pd++) = usegxx ? *(pv++) : 0;
@@ -149,6 +145,65 @@ public:
 typedef Jacobi<int32_t> JacobiShift;
 typedef Jacobi<int32_t, true, true, true, false, false, false> JacobiStereoX;
 typedef Jacobi<int32_t, true, true, true, true, true, true> JacobiAffine;
+
+class GaussNewton
+{
+private:
+    int maxStepCount_;
+public:
+    GaussNewton(int maxStepCount) : maxStepCount_(maxStepCount) {}
+    template<class J, class V> double solve(const cv::Mat & f0, const cv::Mat & f1, const J & j, cv::Mat & pose, V * vis = nullptr)
+    {
+        //std::vector<cv::Mat> v = {f0, f1, f1};
+        //cv::merge(v, out);
+
+        cv::Mat du(2, 3, CV_64F);
+        int h = f0.rows, w = f0.cols;
+        cv::Mat whiteBox(f0.rows, f0.cols, CV_8U, cv::Scalar(100)), mask;
+        double e = 1E10;
+        cv::Mat p = pose.clone();
+        double step = 1.0;
+
+        for(int x = 0; x < 20; x++)
+        {
+            cv::Mat f0t;
+            cv::warpAffine(f0, f0t, p, cv::Size(w, h), cv::INTER_LINEAR | cv::WARP_INVERSE_MAP, cv::BORDER_CONSTANT, cv::Scalar(255));
+            cv::warpAffine(whiteBox, mask, p, cv::Size(w, h), cv::INTER_LINEAR | cv::WARP_INVERSE_MAP);
+
+            cv::Mat em;
+            cv::subtract(f1, f0t, em, mask, CV_16S);
+            double te = cv::norm(em);
+            j.solve<int16_t>(em, du);
+
+
+            if(te >= e)
+            {
+                p = pose.clone();
+                step *= 0.3;
+                if(step > 0.05) continue;
+                if(e / em.total() > 150)
+                {
+                    //cv::vconcat(out, cv::Mat(h, w, CV_8UC3, cv::Scalar(0, 0, 255)), out);
+                    if(vis) vis->add("error");
+                    return false;
+                }
+                return true;
+            }
+            std::vector<cv::Mat> v = {f0t, f1, f1};
+            if(vis)
+            {
+                vis->add(f0t);
+            }
+            //cv::merge(v, f0t);
+            //cv::vconcat(out, f0t, out);
+
+            pose = p.clone();
+            e = te;
+            p += du * step;
+        }
+        return true;
+    }
+};
 
 
 }

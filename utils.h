@@ -4,9 +4,13 @@
 namespace flyflow
 {
 
-typedef float scalar;
-enum {cv_scalar = CV_32F};
+//typedef float scalar;
+//enum {cv_scalar = CV_32F};
 
+template<class T> constexpr int cv_type();
+template<> constexpr int cv_type<uint16_t>() {return CV_16U;}
+template<> constexpr int cv_type<int16_t>() {return CV_16S;}
+template<> constexpr int cv_type<int32_t>() {return CV_32S;}
 
 template<class T> void shrink(const cv::Mat & src, cv::Mat & dst)
 {
@@ -24,6 +28,7 @@ template<class T> void shrink(const cv::Mat & src, cv::Mat & dst)
         s += w;
     }
 }
+
 
 template<class Ts, class Td = Ts> void mulByX(const cv::Mat & src, cv::Mat & dst)
 {

@@ -4,7 +4,7 @@
 #include <memory>
 
 #include "conveyor.h"
-
+#include "visualizer.h"
 
 using namespace std;
 using namespace  flyflow;
@@ -284,7 +284,7 @@ void onImage(const sensor_msgs::ImageConstPtr & msg)
     cv_bridge::CvImagePtr cv_ptr;
     try
     {
-        cv_ptr = cv_bridge::toCvCopy(msg, sensor_msgs::image_encodings::MONO8);
+        //cv_ptr = cv_bridge::toCvCopy(msg, sensor_msgs::image_encodings::MONO8);
     }
     catch(cv_bridge::Exception & e)
     {
@@ -382,6 +382,22 @@ int main(int argc, char *argv[])
     cv::VideoCapture cap(0); // open the default camera
     if(!cap.isOpened())  // check if we succeeded
         return -1;
+
+    Visualizer visgn("GN");
+    Conveyor conv(&visgn);
+    for(;;)
+    {
+        cv::Mat frame;
+        cap >> frame;
+        cv::imshow("cam", frame);
+        conv.onImage(frame);
+        visgn.show();
+        char k = cv::waitKey(1);
+
+    }
+
+
+    /*
     std::unique_ptr<Frame> prev;
     cv::Mat map;
     cv::Point pos(0, 0);
@@ -446,7 +462,7 @@ int main(int argc, char *argv[])
         {
             prev = std::move(f);
         }
-    }
+    }*/
     return 0;
 }
 
