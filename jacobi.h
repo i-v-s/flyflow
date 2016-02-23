@@ -87,6 +87,9 @@ private:
     }
 
 public:
+    inline const cv::Mat & gx() const { return gx_;}
+    inline const cv::Mat & gy() const { return gy_;}
+    inline double scale() const {return scale_;}
     Jacobi(double scale = 1.0): scale_(scale / 32) {}
     void set(const cv::Mat &f)
     {
