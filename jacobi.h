@@ -121,7 +121,7 @@ public:
             if(gy_.empty()) gy_ = cv::Mat(p.gy_.rows / 2, p.gy_.cols / 2, cv_type<T>());
             flyflow::shrink<T>(p.gy_, gy_);
         }
-        scale_ = p.scale_* 0.25;
+        scale_ = p.scale_* 2;
         calcA();
     }
     template<class Te> inline void solve(const cv::Mat & e, Vector & r) const
