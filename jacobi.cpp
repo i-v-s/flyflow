@@ -146,7 +146,7 @@ TEST(GaussNewtonTest, solve_shift)
     typedef Jacobi<int32_t, false, false, true, false, false, true> J;
     J sj;
     int w = 20, h = 20;
-    cv::Mat a(h, w, CV_8U), b;
+    cv::Mat a(h, w, CV_8U);
     uint8_t * p = a.data;
     for(int y = 0; y < h; y++) for(int x = 0; x < w; x++)
         *(p++) = x * (w - x) + y * (h - y);
@@ -167,6 +167,36 @@ TEST(GaussNewtonTest, solve_shift)
     }
 }
 
+TEST(GaussNewtonTest, solve_shift2)
+{
+    typedef Jacobi<int32_t, false, false, true, false, false, true> J;
+    J sj;
+    int w = 20, h = 20;
+    cv::Mat b(h, w, CV_8U);
+    uint8_t * p = b.data;
+    for(int y = 0; y < h; y++) for(int x = 0; x < w; x++)
+        *(p++) = x * (w - x) + y * (h - y);
+    sj.set(b);
+    GaussNewton gn(0);
+    cv::Mat t = cv::Mat::eye(2, 3, CV_64F);
+    for(int x = 0; x < 50; x++)
+    {
+        cv::Mat a(h, w, CV_8U);
+        p = a.data;
+        int sx = (rand() % 10) - 5;
+        int sy = (rand() % 10) - 5;
+
+        for(int y = 0; y < h; y++) for(int x = 0; x < w; x++)
+            *(p++) = (x - sx) * (w - x + sx) + (y - sy) * (h - y + sy);
+
+        double e = gn.solve<J>(a, b, sj, t);
+        /*std::cout << "sx = " << sx << "; sy = " << sy << std::endl;
+        std::cout << "t = " << std::endl << t << std::endl << std::endl;
+        std::cout << "e = " << e << std::endl;*/
+        EXPECT_NEAR(sx, t.at<double>(0, 2), 1.5);
+        EXPECT_NEAR(sy, t.at<double>(1, 2), 1.5);
+    }
+}
 
 /*TEST(GaussNewtonTest, solve_affine)
 {

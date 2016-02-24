@@ -171,8 +171,8 @@ public:
         for(int x = 0; x < maxStepCount_; x++)
         {
             cv::Mat f0t;
-            cv::warpAffine(f0, f0t, p, cv::Size(w, h), cv::INTER_LINEAR | cv::WARP_INVERSE_MAP, cv::BORDER_CONSTANT, cv::Scalar(255));
-            cv::warpAffine(whiteBox, mask, p, cv::Size(w, h), cv::INTER_LINEAR | cv::WARP_INVERSE_MAP);
+            cv::warpAffine(f0,        f0t, p, cv::Size(w, h), cv::INTER_LINEAR | cv::WARP_INVERSE_MAP, cv::BORDER_CONSTANT, cv::Scalar(255));
+            cv::warpAffine(whiteBox, mask, p, cv::Size(w, h), cv::INTER_LINEAR | cv::WARP_INVERSE_MAP, cv::BORDER_CONSTANT, cv::Scalar(0));
 
             cv::Mat em;
             cv::subtract(f1, f0t, em, mask, CV_16S);
