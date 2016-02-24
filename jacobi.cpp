@@ -139,10 +139,59 @@ TEST(JacobiTest, solve_shift)
         //std::cout << "t = " << std::endl << t << std::endl << std::endl;
         //std::cout << "dt = " << std::endl << dt << std::endl << std::endl;
     }
-
-
-
 }
 
+TEST(GaussNewtonTest, solve_shift)
+{
+    typedef Jacobi<int32_t, false, false, true, false, false, true> J;
+    J sj;
+    int w = 20, h = 20;
+    cv::Mat a(h, w, CV_8U), b;
+    uint8_t * p = a.data;
+    for(int y = 0; y < h; y++) for(int x = 0; x < w; x++)
+        *(p++) = x * (w - x) + y * (h - y);
+    sj.set(a);
+    GaussNewton gn;
+    cv::Mat t = cv::Mat::eye(2, 3, CV_64F);
+    for(int x = 0; x < 50; x++)
+    {
+        t.at<double>(0, 2) = (rand() % w) - w / 2;
+        t.at<double>(1, 2) = (rand() % h) - h / 2;
+
+        //std::cout << "t1 = " << std::endl << t << std::endl << std::endl;
+        gn.solve<J>(a, a, sj, t);
+        EXPECT_NEAR(0, t.at<double>(0, 2), 0.1);
+        EXPECT_NEAR(0, t.at<double>(1, 2), 0.1);
+        //std::cout << "t2 = " << std::endl << t << std::endl << std::endl;
+
+    }
+}
+
+
+/*TEST(GaussNewtonTest, solve_affine)
+{
+    typedef Jacobi<int32_t, true, true, true, true, true, true> J;
+    J sj;
+    int w = 20, h = 20;
+    cv::Mat a(h, w, CV_8U), b;
+    uint8_t * p = a.data;
+    for(int y = 0; y < h; y++) for(int x = 0; x < w; x++)
+        *(p++) = x * (w - x) + 128 - y * (h - y);
+    sj.set(a);
+    GaussNewton gn;
+    cv::Mat t = cv::Mat::eye(2, 3, CV_64F);
+    for(int x = 0; x < 50; x++)
+    {
+        t.at<double>(0, 2) = (rand() % w) - w / 2;
+        t.at<double>(1, 2) = (rand() % h) - h / 2;
+
+        //std::cout << "t1 = " << std::endl << t << std::endl << std::endl;
+        gn.solve<J>(a, a, sj, t);
+        EXPECT_NEAR(0, t.at<double>(0, 2), 0.1);
+        EXPECT_NEAR(0, t.at<double>(1, 2), 0.1);
+        //std::cout << "t2 = " << std::endl << t << std::endl << std::endl;
+
+    }
+}*/
 
 }

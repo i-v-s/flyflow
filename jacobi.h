@@ -152,11 +152,11 @@ typedef Jacobi<int32_t, true, true, true, true, true, true> JacobiAffine;
 
 class GaussNewton
 {
-private:
-    int maxStepCount_;
 public:
-    GaussNewton(int maxStepCount) : maxStepCount_(maxStepCount) {}
-    template<class J, class V> double solve(const cv::Mat & f0, const cv::Mat & f1, const J & j, cv::Mat & pose, V * vis = nullptr)
+    int maxStepCount_;
+    double maxError_;
+    GaussNewton(double maxError = 50, int maxStepCount = 20) : maxError_(maxError), maxStepCount_(maxStepCount) {}
+    template<class J, int writeOut = 0> double solve(const cv::Mat & f0, const cv::Mat & f1, const J & j, cv::Mat & pose, std::vector<cv::Mat> * out = 0)
     {
         //std::vector<cv::Mat> v = {f0, f1, f1};
         //cv::merge(v, out);
@@ -168,7 +168,7 @@ public:
         cv::Mat p = pose.clone();
         double step = 1.0;
 
-        for(int x = 0; x < 20; x++)
+        for(int x = 0; x < maxStepCount_; x++)
         {
             cv::Mat f0t;
             cv::warpAffine(f0, f0t, p, cv::Size(w, h), cv::INTER_LINEAR | cv::WARP_INVERSE_MAP, cv::BORDER_CONSTANT, cv::Scalar(255));
@@ -179,8 +179,15 @@ public:
             double te = cv::norm(em);
             j.solve<int16_t>(em, du);
 
+            if(writeOut & 2)
+            {
+                std::cout << "--- it " << x + 1 << std::endl;
+                std::cout << "u = " << std::endl << p << std::endl << std::endl;
+                std::cout << "e = " << te << std::endl;
+                std::cout << "du = " << std::endl << du << std::endl << std::endl;
+            }
 
-            if(te >= e)
+            /*if(te >= e)
             {
                 p = pose.clone();
                 step *= 0.3;
@@ -188,21 +195,22 @@ public:
                 if(e / em.total() > 150)
                 {
                     //cv::vconcat(out, cv::Mat(h, w, CV_8UC3, cv::Scalar(0, 0, 255)), out);
-                    if(vis) vis->add("error");
+                    //if(vis) vis->add("error");
                     return false;
                 }
                 return true;
-            }
-            std::vector<cv::Mat> v = {f0t, f1, f1};
-            if(vis)
-            {
-                vis->add(f0t);
-            }
+            }*/
+            //std::vector<cv::Mat> v = {f0t, f1, f1};
+            if((writeOut & 1) && out)
+                out->push_back(f0t.clone());
             //cv::merge(v, f0t);
             //cv::vconcat(out, f0t, out);
-
-            pose = p.clone();
-            e = te;
+            if(te < e)
+            {
+                p.copyTo(pose);
+                if(te < maxError_) return te;
+                e = te;
+            }
             p += du * step;
         }
         return true;
