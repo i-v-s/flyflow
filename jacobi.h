@@ -20,7 +20,7 @@ public:
     typedef Eigen::Matrix<double, size(), size()> Matrix;
     typedef Eigen::Matrix<double, size(), 1> Vector;
 private:
-    const double scale_;
+    double scale_;
     cv::Mat gx_, gy_; // Gradients
     Eigen::Matrix<double, size(), size()> invA_;
     void calcA()
@@ -121,6 +121,7 @@ public:
             if(gy_.empty()) gy_ = cv::Mat(p.gy_.rows / 2, p.gy_.cols / 2, cv_type<T>());
             flyflow::shrink<T>(p.gy_, gy_);
         }
+        scale_ = p.scale_* 0.25;
         calcA();
     }
     template<class Te> inline void solve(const cv::Mat & e, Vector & r) const

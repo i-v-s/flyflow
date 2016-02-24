@@ -25,9 +25,12 @@ void Visualizer::add(const cv::Mat &image)
 
 void Visualizer::newColumn(const cv::Mat & ref, double scale)
 {
-    ref.convertTo(ref_, CV_8U, scale);
+    double min, max;
+    cv::minMaxLoc(ref, &min, &max);
+    scale_ = max ? (255 / max) : 1.0;
+    ref.convertTo(ref_, CV_8U, scale_);
     cv::Mat col = column_;
-    scale_ = scale;
+    //scale_ = scale;
     if(result_.empty()) result_ = col;
     else
     {

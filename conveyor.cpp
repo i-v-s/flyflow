@@ -4,10 +4,12 @@
 
 namespace flyflow {
 
-Conveyor::Conveyor(Visualizer *vis): gn_(20), vis_(vis)
+Conveyor::Conveyor(Visualizer *vis): gn_(20), vis_(vis), pushHistory(true)
 {
 
 }
+
+//Visualizer vt("test");
 
 void Conveyor::onImage(const cv::Mat &image)
 {
@@ -18,8 +20,14 @@ void Conveyor::onImage(const cv::Mat &image)
         cv::cvtColor(image, mono, CV_RGB2GRAY);
     // TODO rectify
 
-    Frame32 nf(mono, 40);
-    ;
+    Frame32 nf(mono, 20);
+    /*for(auto i = nf.levels_.begin(); i != nf.levels_.end(); i++)
+    {
+        vt.newColumn(*i, 1.0);
+        vt.add(*i);
+    }
+    vt.show();*/
+
     if(jacobi_.empty())
     {
         double scale = 1.0;
@@ -45,7 +53,7 @@ void Conveyor::onImage(const cv::Mat &image)
     }
     pose /= weight;
     if(history_.size() > 0) history_.pop_back();
-    history_.push_front(nf);
+    if(pushHistory || history_.empty()) history_.push_front(nf);
 }
 
 double Conveyor::solve(const Frame32 &f0, const Frame32 &f1, cv::Mat &pose)
@@ -61,7 +69,7 @@ double Conveyor::solve(const Frame32 &f0, const Frame32 &f1, cv::Mat &pose)
         {
             vis_->newColumn(*i1, s);
             vis_->add(*i0);
-            return 1.0;
+            //return 1.0;
         }
         s *= 4;
         double e = gn_.solve<JacobiAffine, Visualizer>(*i0, *i1, *j, pose, vis_);

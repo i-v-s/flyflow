@@ -19,6 +19,7 @@ private:
     double solve(const Frame32 &f0, const Frame32 &f1, cv::Mat & pose);
     Visualizer * vis_;
 public:
+    bool pushHistory;
     Conveyor(Visualizer * vis = 0);
     void onImage(const cv::Mat & image);
 };
