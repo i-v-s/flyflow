@@ -32,8 +32,8 @@ endif()
 
 
 set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -std=c++11")
-add_executable(flyflow main.cpp conveyor.cpp frame.cpp visualizer.cpp)
+add_executable(flyflow main.cpp conveyor.cpp frame.cpp visualizer.cpp imagestat.cpp)
 target_link_libraries(flyflow ${OpenCV_LIBS} ${catkin_LIBRARIES})
 
-add_executable(flyflow_test test.cpp conveyor.cpp frame.cpp jacobi.cpp visualizer.cpp)
+add_executable(flyflow_test test.cpp conveyor.cpp frame.cpp visualizer.cpp )#jacobi.cpp)
 target_link_libraries(flyflow_test gtest ${OpenCV_LIBS} ${catkin_LIBRARIES})

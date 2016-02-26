@@ -15,13 +15,15 @@ private:
     cv::Mat mask_;
     std::vector<JacobiAffine> jacobi_;
     GaussNewton gn_;
-    std::deque<Frame32> history_;
-    double solve(const Frame32 &f0, const Frame32 &f1, cv::Mat & pose);
+    std::deque<Frame16> history_;
+    double solve(const Frame16 &f0, const Frame16 &f1, cv::Mat & pose);
     Visualizer * vis_;
+    double min_, max_;
 public:
+    cv::Mat invmed_;
     bool pushHistory;
     Conveyor(Visualizer * vis = 0);
-    void onImage(const cv::Mat & image);
+    void onImage(const cv::Mat & mono);
 };
 
 }

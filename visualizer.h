@@ -12,7 +12,7 @@ private:
     cv::Mat column_, result_, ref_;
     std::string name_;
     int type_;
-    double scale_;
+    double a_, b_;
 public:
     Visualizer(std::string name);
     void add(const cv::Mat & image);

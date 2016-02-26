@@ -22,7 +22,7 @@ template<class T> void shrink(const cv::Mat & src, cv::Mat & dst)
     {
         for(int x = (w >> 1); x--;)
         {
-            *(d++) = s[0] + s[1] + s[w] + s[w + 1];
+            *(d++) = (s[0] + s[1] + s[w] + s[w + 1]) >> 2;
             s += 2;
         }
         s += w;

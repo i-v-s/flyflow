@@ -52,7 +52,7 @@ private:
         a *= scale_ * scale_;
         invA_ = a.inverse();
     }
-    template<class Te> void calcB(Vector & b, const cv::Mat & e) const
+    template<class Te> void calcB(Vector & b, const cv::Mat & e, double k) const
     {
         assert(!usegx || (e.rows == gx_.rows && e.cols == gx_.cols));
         assert(!usegy || (e.rows == gy_.rows && e.cols == gy_.cols));
@@ -83,16 +83,17 @@ private:
                 assert(r - v.data() == size());
                 b += v * *(pe++);
             }
-        b *= scale_;
+        b *= scale_ * k;
     }
 
 public:
     inline const cv::Mat & gx() const { return gx_;}
     inline const cv::Mat & gy() const { return gy_;}
     inline double scale() const {return scale_;}
-    Jacobi(double scale = 1.0): scale_(scale / 32) {}
-    void set(const cv::Mat &f)
+    Jacobi(): scale_(1.0 / 32) {}
+    void set(const cv::Mat &f, double scale = 1.0)
     {
+        scale_ = scale / 32;
         //assert(h_ == f1.rows && w_ == f1.cols);
         cv::Mat gx, gy;
         if(usegx)
@@ -124,17 +125,17 @@ public:
         scale_ = p.scale_* 2;
         calcA();
     }
-    template<class Te> inline void solve(const cv::Mat & e, Vector & r) const
+    template<class Te> inline void solve(const cv::Mat & e, Vector & r, double k) const
     {
         Vector b;
-        calcB<Te>(b, e);
-        r = invA_ * b;
+        calcB<Te>(b, e, k);
+        r = (invA_ * b) / (k*k);
     }
-    template<class Te> void solve(const cv::Mat & e, cv::Mat & dt) const
+    template<class Te> void solve(const cv::Mat & e, cv::Mat & dt, double k) const
     {
         assert(dt.rows == 2 && dt.cols == 3 && dt.type() == CV_64F);
         Vector v;
-        solve<Te>(e, v);
+        solve<Te>(e, v, k);
         const double * pv = v.data();
         double * pd = (double *) dt.data;
         *(pd++) = usegxx ? *(pv++) : 0;
@@ -156,7 +157,7 @@ public:
     int maxStepCount_;
     double maxError_;
     GaussNewton(double maxError = 50, int maxStepCount = 20) : maxError_(maxError), maxStepCount_(maxStepCount) {}
-    template<class J, int writeOut = 0> double solve(const cv::Mat & f0, const cv::Mat & f1, const J & j, cv::Mat & pose, std::vector<cv::Mat> * out = 0)
+    template<class J, int writeOut = 0> double solve(const cv::Mat & f0, const cv::Mat & f1, const J & j, cv::Mat & pose, double k, std::vector<cv::Mat> * out = 0)
     {
         //std::vector<cv::Mat> v = {f0, f1, f1};
         //cv::merge(v, out);
@@ -177,7 +178,7 @@ public:
             cv::Mat em;
             cv::subtract(f1, f0t, em, mask, CV_16S);
             double te = cv::norm(em);
-            j.solve<int16_t>(em, du);
+            j.solve<int16_t>(em, du, k);
 
             if(writeOut & 2)
             {
@@ -187,33 +188,19 @@ public:
                 std::cout << "du = " << std::endl << du << std::endl << std::endl;
             }
 
-            /*if(te >= e)
-            {
-                p = pose.clone();
-                step *= 0.3;
-                if(step > 0.05) continue;
-                if(e / em.total() > 150)
-                {
-                    //cv::vconcat(out, cv::Mat(h, w, CV_8UC3, cv::Scalar(0, 0, 255)), out);
-                    //if(vis) vis->add("error");
-                    return false;
-                }
-                return true;
-            }*/
-            //std::vector<cv::Mat> v = {f0t, f1, f1};
             if((writeOut & 1) && out)
                 out->push_back(f0t.clone());
-            //cv::merge(v, f0t);
-            //cv::vconcat(out, f0t, out);
-            if(te < e)
+
+            //if(te < e)
             {
                 p.copyTo(pose);
                 if(te < maxError_) return te;
                 e = te;
+                step = 1.0;
             }
             p += du * step;
         }
-        return true;
+        return e;
     }
 };
 
