@@ -1,7 +1,7 @@
 project(flyflow)
 cmake_minimum_required(VERSION 2.8)
 
-#SET(USE_ROS TRUE)
+SET(USE_ROS TRUE)
 
 find_package(OpenCV 3.0.0 REQUIRED)
 #find_package(gtest)
@@ -32,8 +32,8 @@ endif()
 
 
 set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -std=c++11")
-add_executable(flyflow main.cpp conveyor.cpp frame.cpp visualizer.cpp imagestat.cpp)
-target_link_libraries(flyflow ${OpenCV_LIBS} ${catkin_LIBRARIES})
+add_executable(flyflow main.cpp conveyor.cpp frame.cpp visualizer.cpp imagestat.cpp jacobi.cpp)
+target_link_libraries(flyflow gtest ${OpenCV_LIBS} ${catkin_LIBRARIES})
 
-add_executable(flyflow_test test.cpp conveyor.cpp frame.cpp visualizer.cpp )#jacobi.cpp)
+add_executable(flyflow_test test.cpp conveyor.cpp frame.cpp visualizer.cpp jacobi.cpp)
 target_link_libraries(flyflow_test gtest ${OpenCV_LIBS} ${catkin_LIBRARIES})

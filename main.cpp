@@ -11,7 +11,7 @@ using namespace std;
 using namespace  flyflow;
 
 Visualizer visgn("GN");
-Conveyor conv(&visgn);
+Conveyor conv;//&visgn);
 ImageStat is;
 int contrast = 0, brightness = 50, stepMul = 0;
 
@@ -19,10 +19,28 @@ int contrast = 0, brightness = 50, stepMul = 0;
 bool useStat = false;
 
 
+void showPos()
+{
+    /*cv::Point pt, cpt(320, 240);
 
+    ps += tr * gnn.t_(cv::Rect(2, 0, 1, 2));
+    tr *= gnn.t_(cv::Rect(0, 0, 2, 2));
+
+    pt.x = (int)ps.at<double>(0, 0) * 0.2;
+    pt.y = (int)ps.at<double>(1, 0) * 0.2;
+    cv::line(traj, oldPt + cpt, pt + cpt, cv::Scalar(255, 0, 0));
+    cv::Mat view = traj.clone();
+
+    cv::circle(view, trans(tr, 5, 5) + pt + cpt, 4, cv::Scalar(0, 0, 255));
+    cv::circle(view, trans(tr, -5, 5) + pt + cpt, 4, cv::Scalar(0, 0, 255));
+    cv::circle(view, trans(tr, 5, -5) + pt + cpt, 4, cv::Scalar(0, 0, 0));
+    cv::circle(view, trans(tr, -5, -5) + pt + cpt, 4, cv::Scalar(0, 0, 0));*/
+}
 
 bool onImage(const cv::Mat & image)
 {
+    //cv::imshow("image", image);
+
     cv::Mat mono;
     static cv::Mat paused;
     if(!paused.empty())
@@ -38,6 +56,8 @@ bool onImage(const cv::Mat & image)
     //cv::imshow("cam", frame);
     if(useStat)is.onImage(mono);
     conv.onImage(mono1);
+
+
     visgn.show();
     char k = cv::waitKey(1);
     switch(k)
@@ -173,7 +193,7 @@ int main(int argc, char** argv)
     ros::init(argc, argv, "flyflow");
     ros::NodeHandle nh("~");
 
-    imageSub = nh.subscribe("/camera/image_mono", 5, &onImage);
+    imageSub = nh.subscribe("/camera/image_raw", 5, &onImage);
 
     ros::spin();
 }
@@ -193,7 +213,10 @@ void on_trackbar(int val, void * param)
 int main(int argc, char *argv[])
 {
     //gradTest();
-    cv::VideoCapture cap(0); // open the default camera
+    cv::VideoCapture cap(1); // open the default camera
+    cap.set(CV_CAP_PROP_FRAME_WIDTH, 320);
+    cap.set(CV_CAP_PROP_FRAME_HEIGHT, 240);
+    cap.set(CV_CAP_PROP_FPS, 125);
     if(!cap.isOpened())  // check if we succeeded
         return -1;
 
@@ -211,6 +234,10 @@ int main(int argc, char *argv[])
     {
         cv::Mat image;
         cap >> image;
+
+        /*image.rows = 240;
+        image.cols = 320;
+        cv::imshow("cam", image);*/
 
         if(!onImage(image)) return 0;
     }

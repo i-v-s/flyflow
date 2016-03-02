@@ -13,12 +13,13 @@ class Conveyor
 {
 private:
     cv::Mat mask_;
-    std::vector<JacobiAffine> jacobi_;
+    std::vector<Jacobi::Ptr> jacobi_;
     GaussNewton gn_;
-    std::deque<Frame16> history_;
-    double solve(const Frame16 &f0, const Frame16 &f1, cv::Mat & pose);
+    std::deque<Frame8> history_;
+    double solve(const Frame8 &f0, const Frame8 &f1, cv::Mat & pose);
     Visualizer * vis_;
     double min_, max_;
+    void initJacobi(int size);
 public:
     cv::Mat invmed_;
     bool pushHistory;

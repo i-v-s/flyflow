@@ -7,15 +7,17 @@
 namespace flyflow
 {
 
+
+
 template<class Ts, class Td>
-void distort(const cv::Mat & src, cv::Mat & dst, double min, double max)
+void distort(const cv::Mat & src, cv::Mat & dst, double min, double max, double distK = 10)
 {
     const Ts * sp = (const Ts *) src.data, * e = src.dataend;
     Td * dp = (Td *) dst.data;
     for( ; sp < e; sp++, dp++)
     {
         double s = (*sp - min) / (max - min);
-        *dp = (1.5708 + atan((s - 0.5) * 1.5)) * 10000;
+        *dp = (1.5708 + atan((s - 0.5) * distK)) * 80;
     }
 }
 
@@ -40,6 +42,7 @@ public:
                     image.convertTo(i, cv_type<T>(), 128);*/
                 i = cv::Mat(h, w, cv_type<T>());
                 distort<uint8_t, T>(image, i, min_, max_);
+                //cv::medianBlur(i, i, 5);
             }
             else
             {
@@ -53,7 +56,7 @@ public:
     }
 };
 
-typedef Frame<uint16_t> Frame16;
+typedef Frame<uint8_t> Frame8;
 
 }
 #endif // IMAGEFRAME_H

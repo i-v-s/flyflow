@@ -8,6 +8,7 @@ namespace flyflow
 //enum {cv_scalar = CV_32F};
 
 template<class T> constexpr int cv_type();
+template<> constexpr int cv_type<uint8_t>() {return CV_8U;}
 template<> constexpr int cv_type<uint16_t>() {return CV_16U;}
 template<> constexpr int cv_type<int16_t>() {return CV_16S;}
 template<> constexpr int cv_type<int32_t>() {return CV_32S;}
