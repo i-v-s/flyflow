@@ -37,9 +37,120 @@ void showPos()
     cv::circle(view, trans(tr, -5, -5) + pt + cpt, 4, cv::Scalar(0, 0, 0));*/
 }
 
+
+
+class Feature
+{
+public:
+    //Eigen::Matrix sigma_;
+    Eigen::Vector3d pos_;
+    cv::Point2f pt;
+    int age;
+    cv::Scalar col;
+};
+
+
+class Tracker
+{
+public:
+    cv::Ptr<cv::Feature2D> detector_;
+    cv::Ptr<cv::DescriptorMatcher> matcher_;
+    std::vector<cv::KeyPoint> lastkp_;
+    cv::Mat lastdesc_;
+    cv::Mat lastimg_;
+    typedef std::map<int, std::unique_ptr<Feature> > Map;
+    std::unique_ptr<Map> features_;
+
+    Tracker():
+        detector_(cv::ORB::create()),
+        //matcher_(cv::DescriptorMatcher::create("FlannBased"))
+        matcher_(cv::DescriptorMatcher::create("BruteForce-Hamming"))
+    {
+
+
+    }
+
+    void onImage(const cv::Mat & image)
+    {
+        image -= 80;
+        image *= 3;
+        cv::Mat desc;
+        std::vector<cv::KeyPoint> kp;
+        detector_->detectAndCompute(image, cv::noArray(), kp, desc);
+        if(kp.empty()) return;
+        if(!lastkp_.empty())
+        {
+            std::vector<std::vector<cv::DMatch>> matches;
+            //std::vector<cv::KeyPoint> m1, m2;
+            matcher_->knnMatch(lastdesc_, desc, matches, 2);
+            if(matches.empty()) return;
+            cv::Mat res;
+            std::vector<cv::DMatch> good_matches;
+
+            std::unique_ptr<Map> nf(new Map());
+            for(int i = 0; i < matches.size(); i++)
+            {
+                float ratio = 0.8;
+                if(matches[i][0].distance < ratio * matches[i][1].distance)
+                {
+                    cv::DMatch & m = matches[i][0];
+                    good_matches.push_back(matches[i][0]);
+                    if(features_ == nullptr) continue;
+                    Map::iterator mi = features_->find(m.queryIdx);
+                    Feature * f;
+                    if(mi == features_->end())
+                    {
+                        f = new Feature();
+                        f->age = 0;
+                        f->col = cv::Scalar(std::rand() & 255, std::rand() & 255, std::rand() & 255);
+                        nf->insert(std::make_pair(m.trainIdx, std::unique_ptr<Feature>(f)));
+                    }
+                    else
+                    {
+                        f = mi->second.get();
+                        nf->insert(std::make_pair(m.trainIdx, std::move(mi->second)));
+                    }
+                    f->pt = kp[m.trainIdx].pt;
+                    f->age++;
+
+                }
+            }
+            cv::cvtColor(image, res, CV_GRAY2RGB);
+            for(Map::iterator i = nf->begin(); i != nf->end(); i++)
+            {
+                cv::Point2f p = i->second->pt;
+                cv::circle(res, p, i->second->age, i->second->col);
+            }
+
+            //cv::drawMatches(lastimg_, lastkp_, image, kp, good_matches, res, cv::Scalar(255, 0, 0), cv::Scalar(255, 0, 0));
+            cv::imshow("res", res);
+            features_ = std::move(nf);
+        }
+        lastkp_ = kp;
+        lastdesc_ = desc;
+        lastimg_ = image;
+    }
+};
+
+Tracker tr;
+
 bool onImage(const cv::Mat & image)
 {
-    //cv::imshow("image", image);
+    /*cv::Ptr<cv::ORB> orb = cv::ORB::create();
+    std::vector<cv::KeyPoint> kp;
+    orb->detect(image, kp);
+    cv::Mat desc;
+    orb->compute(image, kp, desc);
+
+     //= surf.detectAndCompute(image, cv::None);
+    cv::Mat im2;
+    cv::drawKeypoints(image, kp, im2);
+    cv::Ptr<cv::FlannBasedMatcher> m = cv::FlannBasedMatcher::create();
+    m->knnMatch();
+
+
+    cv::imshow("orb", im2);*/
+    tr.onImage(image);
 
     cv::Mat mono;
     static cv::Mat paused;
@@ -88,9 +199,10 @@ bool onImage(const cv::Mat & image)
 
 #include <ros/ros.h>
 #include <sensor_msgs/Image.h>
+#include <sensor_msgs/Imu.h>
 #include <cv_bridge/cv_bridge.h>
 
-ros::Subscriber imageSub;
+ros::Subscriber imageSub, imuSub;
 
 cv::Point trans(cv::Mat t, int x, int y)
 {
@@ -101,6 +213,17 @@ cv::Point trans(cv::Mat t, int x, int y)
     return cv::Point(v.at<double>(0, 0), v.at<double>(1, 0));
 }
 
+struct Imu
+{
+    double time;
+    double a[3];
+    double w[3];
+};
+
+void onImu(const sensor_msgs::ImuConstPtr & msg)
+{
+
+}
 
 void onImage(const sensor_msgs::ImageConstPtr & msg)
 {
@@ -194,6 +317,8 @@ int main(int argc, char** argv)
     ros::NodeHandle nh("~");
 
     imageSub = nh.subscribe("/camera/image_raw", 5, &onImage);
+
+    imuSub = nh.subscribe("/imu/data", 5, &onImu);
 
     ros::spin();
 }
