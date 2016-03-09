@@ -2,10 +2,12 @@
 #include <opencv2/opencv.hpp>
 #include <vector>
 #include <memory>
+#include <eigen3/Eigen/Geometry>
 
 #include "conveyor.h"
 #include "visualizer.h"
 #include "imagestat.h"
+#include "kalman.h"
 
 using namespace std;
 using namespace  flyflow;
@@ -42,17 +44,34 @@ void showPos()
 class Feature
 {
 public:
-    //Eigen::Matrix sigma_;
+    Eigen::Matrix<double, 10, 10> sigma_;
     Eigen::Vector3d pos_;
+
     cv::Point2f pt;
     int age;
     cv::Scalar col;
+    bool h(Eigen::Matrix<double, 2, 1> * Z, Eigen::Matrix<double, 2, 10> * H, const Eigen::Matrix<double, 10, 1> & X)
+    {
+        Eigen::Vector3d d = X.block<3, 1>(4, 0) - X.block<3, 1>(7, 0);
+        Eigen::Quaterniond q = Eigen::Map<const Eigen::Quaterniond>(X.data());
+        q.normalize();
+        q = q.conjugate();
+        d = q._transformVector(d);
+        if(d(2) < 0.01) return false;
+        (*Z)(0) = d(0) / d(2) * 200 + 320;
+        (*Z)(1) = d(1) / d(2) * 200 + 240;
+
+        return true;
+    }
 };
 
 
 class Tracker
 {
 public:
+    Kalman<double, 7> kalman_;
+    Corrector<double, Feature, 10, 2> corrector_;
+
     cv::Ptr<cv::Feature2D> detector_;
     cv::Ptr<cv::DescriptorMatcher> matcher_;
     std::vector<cv::KeyPoint> lastkp_;
@@ -80,6 +99,7 @@ public:
         if(kp.empty()) return;
         if(!lastkp_.empty())
         {
+            kalman_.predict();
             std::vector<std::vector<cv::DMatch>> matches;
             //std::vector<cv::KeyPoint> m1, m2;
             matcher_->knnMatch(lastdesc_, desc, matches, 2);
@@ -110,9 +130,15 @@ public:
                         f = mi->second.get();
                         nf->insert(std::make_pair(m.trainIdx, std::move(mi->second)));
                     }
-                    f->pt = kp[m.trainIdx].pt;
+                    Eigen::Vector2d z;
+                    cv::Point2f pt = kp[m.trainIdx].pt;
+                    z(0) = pt.x;
+                    z(1) = pt.y;
+                    f->pt = pt;
                     f->age++;
-
+                    Eigen::Matrix<double, 10, 1> X;
+                    X << kalman_.X_, f->pos_;
+                    corrector_.correct(X, f->sigma_, z, f);
                 }
             }
             cv::cvtColor(image, res, CV_GRAY2RGB);
