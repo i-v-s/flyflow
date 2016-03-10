@@ -39,7 +39,7 @@ void showPos()
     cv::circle(view, trans(tr, -5, -5) + pt + cpt, 4, cv::Scalar(0, 0, 0));*/
 }
 
-
+Eigen::Matrix3d caMat = Eigen::Matrix3d::Identity();
 
 class Feature
 {
@@ -50,18 +50,119 @@ public:
     cv::Point2f pt;
     int age;
     cv::Scalar col;
+    void diffQuatMul(Eigen::Vector3d * v,
+                  Eigen::Matrix<double, 3, 3> * dVdA,
+                  Eigen::Matrix<double, 3, 4> * dVdQ,
+                  const Eigen::Quaterniond & q,
+                  const Eigen::Vector3d & a)
+    {
+        Eigen::Matrix3d rm = q.toRotationMatrix();
+        *v = rm * a;
+        *dVdA = rm;
+
+        double _2x = 2 * q.x(), _2y = 2 * q.y(), _2z = 2 * q.z(), _2w = 2 * q.w();
+        Eigen::Matrix3d dRdx, dRdy, dRdz, dRdw;
+        dRdx <<      0,    _2y,    _2z,
+                   _2y, -2*_2x,   -_2w,
+                   _2z,    _2w, -2*_2x;
+        dVdQ->block<3, 1>(0, 0) = dRdx * a;
+
+        dRdy << -2*_2y,    _2x,    _2w,
+                   _2x,      0,    _2z,
+                  -_2w,    _2z, -2*_2y;
+        dVdQ->block<3, 1>(0, 1) = dRdy * a;
+
+        dRdz << -2*_2z,   -_2w,    _2x,
+                   _2w, -2*_2z,    _2y,
+                   _2x,    _2y,      0;
+        dVdQ->block<3, 1>(0, 2) = dRdz * a;
+
+        dRdw <<      0,   -_2z,    _2y,
+                   _2z,      0,   -_2x,
+                  -_2y,    _2x,      0;
+        dVdQ->block<3, 1>(0, 3) = dRdw * a;
+    }
+    template<int n> void diffDiv(Eigen::Matrix<double, 2, n> * dXYdV, const Eigen::Vector3d & v)
+    {
+
+    }
+
     bool h(Eigen::Matrix<double, 2, 1> * Z, Eigen::Matrix<double, 2, 10> * H, const Eigen::Matrix<double, 10, 1> & X)
     {
-        Eigen::Vector3d d = X.block<3, 1>(4, 0) - X.block<3, 1>(7, 0);
+        Eigen::Vector3d a = X.block<3, 1>(4, 0) - X.block<3, 1>(7, 0);
         Eigen::Quaterniond q = Eigen::Map<const Eigen::Quaterniond>(X.data());
         q.normalize();
-        q = q.conjugate();
-        d = q._transformVector(d);
+
+        Eigen::Matrix3d rm;
+        Eigen::Matrix<double, 3, 4> dVdQ;
+        diffQuatMul(&v, &rm, &dVdQ, q, a);
+
+        Eigen::Matrix3d mr = caMat * rm;
+        d = mr * d;
         if(d(2) < 0.01) return false;
-        (*Z)(0) = d(0) / d(2) * 200 + 320;
-        (*Z)(1) = d(1) / d(2) * 200 + 240;
+        (*Z)(0) = d(0) / d(2);
+        (*Z)(1) = d(1) / d(2);
+        // Derivative of screen coords on copter pos
+        Eigen::Matrix<double, 2, 3> dxydP = (mr.block<2, 3>(0, 0) * d(2) - d.block<2, 1>(0, 0) * mr.block<1, 3>(2, 0)) / (d(2) * d(2));
+        H->block<2, 3>(0, 4) =  dxydP;
+        H->block<2, 3>(0, 7) = -dxydP;
+        Eigen::Matrix<double, 2, 4> dxydQ = (dVdQ.block<2, 4>(0, 0) * d(2) - d.block<2, 1>(0, 0) * dVdQ.block<1, 4>(2, 0)) / (d(2) * d(2));
+        H->block<2, 4>(0, 0) = dxydQ;
 
         return true;
+    }
+    void testh()
+    {
+        Eigen::Matrix<double, 2, 1> Z, Z1, Z2;
+        Eigen::Matrix<double, 2, 10> H, H1;
+        Eigen::Matrix<double, 10, 1> X;
+        X << 0, 0, 0, 1, // Copter quaternion
+             1, 2, 3, // Copter pos
+             2, 1, 0; // Feature pos
+        Eigen::Vector3d a;
+        a << -1, 1, 3;
+        Eigen::Quaterniond q(1, 7, 1, 4);
+        q.normalize();
+
+        Eigen::Vector3d V;
+        Eigen::Matrix<double, 3, 3> dVdA;
+        Eigen::Matrix<double, 3, 4> dVdQ;
+
+
+        diffQuatMul(&V, &dVdA, &dVdQ, q, a);
+        {
+            for(int x = 0; x < 4; x++)
+            {
+                Eigen::Quaterniond q1 = q;
+                q1.coeffs()(x) += 0.01;
+                Eigen::Vector3d V1 = q1._transformVector(a);
+
+                Eigen::Matrix<double, 3, 1> dVr = V1 - V;
+                Eigen::Matrix<double, 3, 1> dVj = dVdQ * (q1.coeffs() - q.coeffs());
+                std::cout << "dVr " << x << " = " << dVr.transpose() << std::endl;
+                std::cout << "dVj " << x << " = " << dVj.transpose() << std::endl;
+                //std::cout << "e" << x << " = " << (dZ2 - dZ1).transpose() << std::endl;
+            }
+        }
+        /*
+        if(h(&Z, &H, X))
+        {
+            std::cout << "Z = " << Z.transpose() << std::endl;
+            std::cout << "H = " << std::endl << H << std::endl;
+            for(int x = 0; x < 10; x++)
+            {
+                Eigen::Matrix<double, 10, 1> X1 = X;
+                X1(x) += 0.01;
+                h(&Z1, &H1, X1);
+                Eigen::Matrix<double, 2, 1> dZ1 = Z1 - Z;
+                Eigen::Matrix<double, 2, 1> dZ2 = H * (X1 - X);
+                std::cout << "dz1 " << x << " = " << dZ1.transpose() << std::endl;
+                std::cout << "dz2 " << x << " = " << dZ2.transpose() << std::endl;
+                std::cout << "e" << x << " = " << (dZ2 - dZ1).transpose() << std::endl;
+            }
+        }
+
+        */
     }
 };
 
@@ -117,19 +218,15 @@ public:
                     good_matches.push_back(matches[i][0]);
                     if(features_ == nullptr) continue;
                     Map::iterator mi = features_->find(m.queryIdx);
-                    Feature * f;
+                    std::unique_ptr<Feature> f;
                     if(mi == features_->end())
                     {
-                        f = new Feature();
+                        f = std::unique_ptr<Feature>(new Feature());
                         f->age = 0;
                         f->col = cv::Scalar(std::rand() & 255, std::rand() & 255, std::rand() & 255);
-                        nf->insert(std::make_pair(m.trainIdx, std::unique_ptr<Feature>(f)));
                     }
                     else
-                    {
-                        f = mi->second.get();
-                        nf->insert(std::make_pair(m.trainIdx, std::move(mi->second)));
-                    }
+                        f = std::move(mi->second);
                     Eigen::Vector2d z;
                     cv::Point2f pt = kp[m.trainIdx].pt;
                     z(0) = pt.x;
@@ -138,7 +235,8 @@ public:
                     f->age++;
                     Eigen::Matrix<double, 10, 1> X;
                     X << kalman_.X_, f->pos_;
-                    corrector_.correct(X, f->sigma_, z, f);
+                    corrector_.correct(X, f->sigma_, z, f.get());
+                    nf->insert(std::make_pair(m.trainIdx, std::move(f)));
                 }
             }
             cv::cvtColor(image, res, CV_GRAY2RGB);
@@ -337,8 +435,21 @@ void onImage(const sensor_msgs::ImageConstPtr & msg)
 
 }
 
+class Test
+{
+public:
+    int n;
+    Test(int n): n(n) { std::cout << "Test " << n << " created" << std::endl;}
+    void show() { std::cout << "Test " << n << " show" << std::endl;}
+    ~Test() { std::cout << "Test " << n << " destroyed" << std::endl;}
+};
+
+
 int main(int argc, char** argv)
 {
+    Feature f;
+    f.testh();
+
     ros::init(argc, argv, "flyflow");
     ros::NodeHandle nh("~");
 
