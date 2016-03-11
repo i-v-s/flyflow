@@ -39,7 +39,7 @@ void showPos()
     cv::circle(view, trans(tr, -5, -5) + pt + cpt, 4, cv::Scalar(0, 0, 0));*/
 }
 
-Eigen::Matrix3d caMat = Eigen::Matrix3d::Identity();
+Eigen::Matrix3d caMat;// = Eigen::Matrix3d::Identity();
 
 class Feature
 {
@@ -56,26 +56,27 @@ public:
                   const Eigen::Quaterniond & q,
                   const Eigen::Vector3d & a)
     {
-        Eigen::Matrix3d rm = q.toRotationMatrix();
+        Eigen::Quaterniond qc = q.conjugate();
+        Eigen::Matrix3d rm = qc.toRotationMatrix();
         *v = rm * a;
         *dVdA = rm;
 
-        double _2x = 2 * q.x(), _2y = 2 * q.y(), _2z = 2 * q.z(), _2w = 2 * q.w();
+        double _2x = 2 * qc.x(), _2y = 2 * qc.y(), _2z = 2 * qc.z(), _2w = 2 * qc.w();
         Eigen::Matrix3d dRdx, dRdy, dRdz, dRdw;
         dRdx <<      0,    _2y,    _2z,
                    _2y, -2*_2x,   -_2w,
                    _2z,    _2w, -2*_2x;
-        dVdQ->block<3, 1>(0, 0) = dRdx * a;
+        dVdQ->block<3, 1>(0, 0) = -dRdx * a;
 
         dRdy << -2*_2y,    _2x,    _2w,
                    _2x,      0,    _2z,
                   -_2w,    _2z, -2*_2y;
-        dVdQ->block<3, 1>(0, 1) = dRdy * a;
+        dVdQ->block<3, 1>(0, 1) = -dRdy * a;
 
         dRdz << -2*_2z,   -_2w,    _2x,
                    _2w, -2*_2z,    _2y,
                    _2x,    _2y,      0;
-        dVdQ->block<3, 1>(0, 2) = dRdz * a;
+        dVdQ->block<3, 1>(0, 2) = -dRdz * a;
 
         dRdw <<      0,   -_2z,    _2y,
                    _2z,      0,   -_2x,
@@ -89,62 +90,87 @@ public:
 
     bool h(Eigen::Matrix<double, 2, 1> * Z, Eigen::Matrix<double, 2, 10> * H, const Eigen::Matrix<double, 10, 1> & X)
     {
-        Eigen::Vector3d a = X.block<3, 1>(4, 0) - X.block<3, 1>(7, 0);
-        Eigen::Quaterniond q = Eigen::Map<const Eigen::Quaterniond>(X.data());
-        q.normalize();
+        Eigen::Vector3d a = X.block<3, 1>(7, 0) - X.block<3, 1>(4, 0);
+        Eigen::Quaterniond q = Eigen::Map<const Eigen::Quaterniond>(X.data()).normalized();
+        //q.normalize();
 
         Eigen::Matrix3d rm;
         Eigen::Matrix<double, 3, 4> dVdQ;
+        Eigen::Vector3d v;
         diffQuatMul(&v, &rm, &dVdQ, q, a);
+        dVdQ = 2 * caMat * dVdQ;
 
         Eigen::Matrix3d mr = caMat * rm;
-        d = mr * d;
-        if(d(2) < 0.01) return false;
-        (*Z)(0) = d(0) / d(2);
-        (*Z)(1) = d(1) / d(2);
+        v = mr * v;
+        if(v(2) < 0.01) return false;
+        (*Z)(0) = v(0) / v(2);
+        (*Z)(1) = v(1) / v(2);
         // Derivative of screen coords on copter pos
-        Eigen::Matrix<double, 2, 3> dxydP = (mr.block<2, 3>(0, 0) * d(2) - d.block<2, 1>(0, 0) * mr.block<1, 3>(2, 0)) / (d(2) * d(2));
-        H->block<2, 3>(0, 4) =  dxydP;
-        H->block<2, 3>(0, 7) = -dxydP;
-        Eigen::Matrix<double, 2, 4> dxydQ = (dVdQ.block<2, 4>(0, 0) * d(2) - d.block<2, 1>(0, 0) * dVdQ.block<1, 4>(2, 0)) / (d(2) * d(2));
+        Eigen::Matrix<double, 2, 3> dxydP = (mr.block<2, 3>(0, 0) * v(2) - v.block<2, 1>(0, 0) * mr.block<1, 3>(2, 0)) / (v(2) * v(2));
+        H->block<2, 3>(0, 4) = -dxydP;
+        H->block<2, 3>(0, 7) =  dxydP;
+        Eigen::Matrix<double, 2, 4> dxydQ = (v.block<2, 1>(0, 0) * dVdQ.block<1, 4>(2, 0) - dVdQ.block<2, 4>(0, 0) * v(2)) / (v(2) * v(2));
         H->block<2, 4>(0, 0) = dxydQ;
 
         return true;
     }
-    void testh()
+    void testdqm()
     {
-        Eigen::Matrix<double, 2, 1> Z, Z1, Z2;
-        Eigen::Matrix<double, 2, 10> H, H1;
-        Eigen::Matrix<double, 10, 1> X;
-        X << 0, 0, 0, 1, // Copter quaternion
-             1, 2, 3, // Copter pos
-             2, 1, 0; // Feature pos
         Eigen::Vector3d a;
-        a << -1, 1, 3;
-        Eigen::Quaterniond q(1, 7, 1, 4);
+        a << 2, 3, 5;
+        Eigen::Quaterniond q(10, -7, 1, 4);
         q.normalize();
 
         Eigen::Vector3d V;
+        Eigen::Vector2d S;
         Eigen::Matrix<double, 3, 3> dVdA;
         Eigen::Matrix<double, 3, 4> dVdQ;
-
+        Eigen::Matrix<double, 2, 4> dSdQ;
 
         diffQuatMul(&V, &dVdA, &dVdQ, q, a);
         {
+            V = caMat * V;
+            dVdQ = caMat * dVdQ;
+            S(0) = V(0) / V(2);
+            S(1) = V(1) / V(2);
+            dSdQ = (dVdQ.block<2, 4>(0, 0) * V(2) - V.block<2, 1>(0, 0) * dVdQ.block<1, 4>(2, 0)) / (V(2) * V(2));
             for(int x = 0; x < 4; x++)
             {
                 Eigen::Quaterniond q1 = q;
-                q1.coeffs()(x) += 0.01;
-                Eigen::Vector3d V1 = q1._transformVector(a);
+                q1.coeffs()(x) += 0.001;
+                //Eigen::Quaterniond q2 = q1.normalized();
+                q1.normalize();
+                Eigen::Vector3d V1 = caMat * (q1.conjugate()._transformVector(a));
 
                 Eigen::Matrix<double, 3, 1> dVr = V1 - V;
                 Eigen::Matrix<double, 3, 1> dVj = dVdQ * (q1.coeffs() - q.coeffs());
                 std::cout << "dVr " << x << " = " << dVr.transpose() << std::endl;
                 std::cout << "dVj " << x << " = " << dVj.transpose() << std::endl;
                 //std::cout << "e" << x << " = " << (dZ2 - dZ1).transpose() << std::endl;
+
+                Eigen::Vector2d S1;
+                S1(0) = V1(0) / V1(2);
+                S1(1) = V1(1) / V1(2);
+
+                Eigen::Matrix<double, 2, 1> dSr = S1 - S;
+                Eigen::Matrix<double, 2, 1> dSj = dSdQ * (q1.coeffs() - q.coeffs());
+                std::cout << "dSr " << x << " = " << dSr.transpose() << std::endl;
+                std::cout << "dSj " << x << " = " << dSj.transpose() << std::endl;
+
+
             }
+
         }
-        /*
+    }
+    void testh()
+    {
+
+        Eigen::Matrix<double, 2, 1> Z, Z1, Z2;
+        Eigen::Matrix<double, 2, 10> H, H1, Hr;
+        Eigen::Matrix<double, 10, 1> X;
+        X << 0, 0, 1, 0, // Copter quaternion
+             1, 0, 1, // Copter pos
+             3, 1, 4; // Feature pos
         if(h(&Z, &H, X))
         {
             std::cout << "Z = " << Z.transpose() << std::endl;
@@ -152,17 +178,12 @@ public:
             for(int x = 0; x < 10; x++)
             {
                 Eigen::Matrix<double, 10, 1> X1 = X;
-                X1(x) += 0.01;
+                X1(x) += 0.001;
                 h(&Z1, &H1, X1);
-                Eigen::Matrix<double, 2, 1> dZ1 = Z1 - Z;
-                Eigen::Matrix<double, 2, 1> dZ2 = H * (X1 - X);
-                std::cout << "dz1 " << x << " = " << dZ1.transpose() << std::endl;
-                std::cout << "dz2 " << x << " = " << dZ2.transpose() << std::endl;
-                std::cout << "e" << x << " = " << (dZ2 - dZ1).transpose() << std::endl;
+                Hr.block<2, 1>(0, x) = (Z1 - Z) / 0.001;
             }
+            std::cout << "Hr = " << std::endl << Hr << std::endl;
         }
-
-        */
     }
 };
 
@@ -447,7 +468,11 @@ public:
 
 int main(int argc, char** argv)
 {
+    caMat << 300,   0, 320,
+               0, 300, 240,
+               0,   0,   1;
     Feature f;
+    f.testdqm();
     f.testh();
 
     ros::init(argc, argv, "flyflow");
