@@ -110,6 +110,7 @@ public:
         H->block<2, 3>(0, 4) = -dxydP;
         H->block<2, 3>(0, 7) =  dxydP;
         Eigen::Matrix<double, 2, 4> dxydQ = (dVdQ.block<2, 4>(0, 0) * v(2) - v.block<2, 1>(0, 0) * dVdQ.block<1, 4>(2, 0)) / (v(2) * v(2));
+        dxydQ *= (Eigen::Matrix<double, 4, 4>::Identity() - q.coeffs() * q.coeffs().transpose());
         H->block<2, 4>(0, 0) = dxydQ;
 
         return true;
