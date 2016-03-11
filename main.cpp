@@ -98,10 +98,10 @@ public:
         Eigen::Matrix<double, 3, 4> dVdQ;
         Eigen::Vector3d v;
         diffQuatMul(&v, &rm, &dVdQ, q, a);
-        dVdQ = 2 * caMat * dVdQ;
+        v = caMat * v;
+        dVdQ = caMat * dVdQ;
 
         Eigen::Matrix3d mr = caMat * rm;
-        v = mr * v;
         if(v(2) < 0.01) return false;
         (*Z)(0) = v(0) / v(2);
         (*Z)(1) = v(1) / v(2);
@@ -109,7 +109,7 @@ public:
         Eigen::Matrix<double, 2, 3> dxydP = (mr.block<2, 3>(0, 0) * v(2) - v.block<2, 1>(0, 0) * mr.block<1, 3>(2, 0)) / (v(2) * v(2));
         H->block<2, 3>(0, 4) = -dxydP;
         H->block<2, 3>(0, 7) =  dxydP;
-        Eigen::Matrix<double, 2, 4> dxydQ = (v.block<2, 1>(0, 0) * dVdQ.block<1, 4>(2, 0) - dVdQ.block<2, 4>(0, 0) * v(2)) / (v(2) * v(2));
+        Eigen::Matrix<double, 2, 4> dxydQ = (dVdQ.block<2, 4>(0, 0) * v(2) - v.block<2, 1>(0, 0) * dVdQ.block<1, 4>(2, 0)) / (v(2) * v(2));
         H->block<2, 4>(0, 0) = dxydQ;
 
         return true;
