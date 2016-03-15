@@ -1,5 +1,6 @@
 #include <iostream>
 #include <opencv2/opencv.hpp>
+#include <opencv2/viz.hpp>
 #include <vector>
 #include <memory>
 #include <eigen3/Eigen/Geometry>
@@ -8,6 +9,7 @@
 #include "visualizer.h"
 #include "imagestat.h"
 #include "kalman.h"
+#include "kalmancopter.h"
 
 using namespace std;
 using namespace  flyflow;
@@ -16,6 +18,8 @@ Visualizer visgn("GN");
 Conveyor conv;//&visgn);
 ImageStat is;
 int contrast = 0, brightness = 50, stepMul = 0;
+
+cv::viz::Viz3d viz("viz");
 
 
 bool useStat = false;
@@ -192,7 +196,7 @@ public:
 class Tracker
 {
 public:
-    Kalman<double, 7> kalman_;
+    KalmanCopter kalman_;
     Corrector<double, Feature, 10, 2> corrector_;
 
     cv::Ptr<cv::Feature2D> detector_;
@@ -296,7 +300,7 @@ bool onImage(const cv::Mat & image)
 
 
     cv::imshow("orb", im2);*/
-    tr.onImage(image);
+    //tr.onImage(image);
 
     cv::Mat mono;
     static cv::Mat paused;
@@ -368,6 +372,52 @@ struct Imu
 
 void onImu(const sensor_msgs::ImuConstPtr & msg)
 {
+    cv::Mat vi(480, 640, CV_8UC3, cv::Scalar(255, 200, 128));
+    Eigen::Quaterniond q(msg->orientation.w, msg->orientation.x, msg->orientation.y, msg->orientation.z);
+    Eigen::Matrix3d rm = q.toRotationMatrix();
+    Eigen::Vector3d vx, vy, vz;
+    vx << 10, 0, 0;
+    vy << 0, 10, 0;
+    vz << 0, 0, 10;
+    vx = rm * vx;
+    vy = rm * vy;
+    vz = rm * vz;
+    //cv::Point pt1(320, 240), pt2(320 + v(0), 240 + v(1));
+
+    //cv::arrowedLine(vi, pt1, pt2, cv::Scalar(0, 0, 255));
+    //cv::imshow("vz", vi);
+    Eigen::Vector3d a, w;
+    a << msg->linear_acceleration.x, msg->linear_acceleration.y, msg->linear_acceleration.z;
+    w << msg->angular_velocity.x, msg->linear_acceleration.y, msg->linear_acceleration.z;
+    tr.kalman_.predictByImu(msg->header.stamp.toSec(), a, w);
+    Eigen::Quaterniond q1 = tr.kalman_.getAttitude();
+    Eigen::Matrix3d rm1 = q1.toRotationMatrix();
+    Eigen::Vector3d vx1, vy1, vz1;
+    vx1 << 10, 0, 0;
+    vy1 << 0, 10, 0;
+    vz1 << 0, 0, 10;
+    vx1 = rm1 * vx1;
+    vy1 = rm1 * vy1;
+    vz1 = rm1 * vz1;
+
+    cv::viz::WGrid grid;
+    cv::viz::WLine linex(cv::Point3d(0.0, 0.0, 0.0), cv::Point3d(vx(0), vx(1), vx(2)), cv::viz::Color::apricot());
+    cv::viz::WLine liney(cv::Point3d(0.0, 0.0, 0.0), cv::Point3d(vy(0), vy(1), vy(2)), cv::viz::Color::amethyst());
+    cv::viz::WLine linez(cv::Point3d(0.0, 0.0, 0.0), cv::Point3d(vz(0), vz(1), vz(2)), cv::viz::Color::azure());
+    viz.showWidget("grid", grid);
+    viz.showWidget("linex", linex);
+    viz.showWidget("liney", liney);
+    viz.showWidget("linez", linez);
+
+    cv::viz::WLine linex1(cv::Point3d(0.0, 0.0, 0.0), cv::Point3d(vx1(0), vx1(1), vx1(2)), cv::viz::Color::apricot());
+    cv::viz::WLine liney1(cv::Point3d(0.0, 0.0, 0.0), cv::Point3d(vy1(0), vy1(1), vy1(2)), cv::viz::Color::amethyst());
+    cv::viz::WLine linez1(cv::Point3d(0.0, 0.0, 0.0), cv::Point3d(vz1(0), vz1(1), vz1(2)), cv::viz::Color::azure());
+    viz.showWidget("linex1", linex1);
+    viz.showWidget("liney1", liney1);
+    viz.showWidget("linez1", linez1);
+
+    viz.spinOnce();
+
 
 }
 
@@ -479,9 +529,9 @@ int main(int argc, char** argv)
     ros::init(argc, argv, "flyflow");
     ros::NodeHandle nh("~");
 
-    imageSub = nh.subscribe("/camera/image_raw", 5, &onImage);
+    imageSub = nh.subscribe("/camera/image_mono", 5, &onImage);
 
-    imuSub = nh.subscribe("/imu/data", 5, &onImu);
+    imuSub = nh.subscribe("/mavros/imu/data", 5, &onImu);
 
     ros::spin();
 }
