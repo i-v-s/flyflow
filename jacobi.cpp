@@ -11,12 +11,12 @@ template<class T, bool usegxx = false, bool usegxy = false, bool usegx = true,
 class JacobiT: public Jacobi
 {
 public:
-    static constexpr int size() { return (usegx?1:0) + (usegxx?1:0) + (usegxy?1:0) + (usegy?1:0) + (usegyx?1:0) + (usegyy?1:0);}
-    typedef Eigen::Matrix<double, size(), size()> Matrix;
-    typedef Eigen::Matrix<double, size(), 1> Vector;
+	static constexpr int size() { return (usegx?1:0) + (usegxx?1:0) + (usegxy?1:0) + (usegy?1:0) + (usegyx?1:0) + (usegyy?1:0);}
+    typedef Eigen::Matrix<double, (usegx?1:0)+(usegxx?1:0)+(usegxy?1:0)+(usegy?1:0)+(usegyx?1:0)+(usegyy?1:0), (usegx?1:0)+(usegxx?1:0)+(usegxy?1:0)+(usegy?1:0)+(usegyx?1:0)+(usegyy?1:0)> Matrix;
+    typedef Eigen::Matrix<double, (usegx?1:0)+(usegxx?1:0)+(usegxy?1:0)+(usegy?1:0)+(usegyx?1:0)+(usegyy?1:0), 1> Vector;
 private:
     int kernel_;
-    Eigen::Matrix<double, size(), size()> invA_;
+    Eigen::Matrix<double, (usegx?1:0)+(usegxx?1:0)+(usegxy?1:0)+(usegy?1:0)+(usegyx?1:0)+(usegyy?1:0), (usegx?1:0)+(usegxx?1:0)+(usegxy?1:0)+(usegy?1:0)+(usegyx?1:0)+(usegyy?1:0)> invA_;
     void calcA()
     {
         Matrix a = Matrix::Zero();
@@ -185,6 +185,7 @@ template<class T> Jacobi::Ptr createT(Jacobi::Type jType)
         return Jacobi::Ptr(new JacobiT<T, true, true, true, false, false, false>());
     default:
         assert(!"Unknown type");
+		return nullptr;
     }
 }
 
@@ -198,6 +199,7 @@ Jacobi::Ptr Jacobi::create(Jacobi::Type jType, int cvType)
         return createT<int32_t>(jType);
     default:
         assert(!"Unknown type");
+		return nullptr;
     }
 }
 

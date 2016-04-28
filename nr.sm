@@ -1,0 +1,292 @@
+﻿<?xml version="1.0" encoding="utf-8" standalone="yes"?>
+<?application progid="SMath Studio Desktop" version="0.98.5935.13216"?>
+<regions>
+  <settings>
+    <identity>
+      <id>af59df53-138a-4268-b6d7-1497da221524</id>
+      <revision>5</revision>
+    </identity>
+    <calculation>
+      <precision>4</precision>
+      <exponentialThreshold>5</exponentialThreshold>
+      <fractions>decimal</fractions>
+    </calculation>
+    <pageModel active="true" printAreas="true" simpleEqualsOnly="false" printBackgroundImages="true">
+      <paper id="1" orientation="Portrait" width="850" height="1100" />
+      <margins left="39" right="39" top="39" bottom="39" />
+      <header alignment="Center" color="#a9a9a9">&amp;[DATE] &amp;[TIME] - &amp;[FILENAME]</header>
+      <footer alignment="Center" color="#a9a9a9">&amp;[PAGENUM] / &amp;[COUNT]</footer>
+      <backgrounds />
+    </pageModel>
+    <dependencies>
+      <assembly name="SMath Studio Desktop" version="0.98.5935.13216" guid="a37cba83-b69c-4c71-9992-55ff666763bd" />
+      <assembly name="Math Region" version="0.98.5935.13216" guid="02f1ab51-215b-466e-a74d-5d8b1cf85e8d" />
+      <assembly name="Special Functions" version="1.11.5935.13219" guid="2814e667-4e12-48b1-8d51-194e480eabc5" />
+      <assembly name="Plot Region" version="1.9.5935.13223" guid="c451c2b5-798b-4f08-b9ec-b90963d1ddaa" />
+    </dependencies>
+  </settings>
+  <region id="0" left="36" top="45" width="189" height="89" color="#000000" bgColor="#ffffff" fontSize="10">
+    <math>
+      <input>
+        <e type="operand">x</e>
+        <e type="operand">μ</e>
+        <e type="operand">σ</e>
+        <e type="function" args="3">nr</e>
+        <e type="operand">e</e>
+        <e type="operand">x</e>
+        <e type="operand">μ</e>
+        <e type="operator" args="2">-</e>
+        <e type="bracket">(</e>
+        <e type="operand">2</e>
+        <e type="operator" args="2">^</e>
+        <e type="operand">2</e>
+        <e type="operand">σ</e>
+        <e type="operand">2</e>
+        <e type="operator" args="2">^</e>
+        <e type="operator" args="2">*</e>
+        <e type="operator" args="2">/</e>
+        <e type="operator" args="1">-</e>
+        <e type="operator" args="2">^</e>
+        <e type="operand">σ</e>
+        <e type="operand">2</e>
+        <e type="operand">π</e>
+        <e type="operator" args="2">*</e>
+        <e type="function" preserve="true" args="1">sqrt</e>
+        <e type="operator" args="2">*</e>
+        <e type="operator" args="2">/</e>
+        <e type="operator" args="2">:</e>
+      </input>
+    </math>
+  </region>
+  <region id="1" left="261" top="72" width="51" height="24" color="#000000" bgColor="#ffffff" fontSize="10">
+    <math>
+      <input>
+        <e type="operand">μ1</e>
+        <e type="operand">0</e>
+        <e type="operator" args="2">:</e>
+      </input>
+    </math>
+  </region>
+  <region id="2" left="324" top="72" width="68" height="24" color="#000000" bgColor="#ffffff" fontSize="10">
+    <math>
+      <input>
+        <e type="operand">σ1</e>
+        <e type="operand">0.5</e>
+        <e type="operator" args="2">:</e>
+      </input>
+    </math>
+  </region>
+  <region id="3" left="261" top="99" width="51" height="24" color="#000000" bgColor="#ffffff" fontSize="10">
+    <math>
+      <input>
+        <e type="operand">μ2</e>
+        <e type="operand">1</e>
+        <e type="operator" args="2">:</e>
+      </input>
+    </math>
+  </region>
+  <region id="4" left="324" top="99" width="51" height="24" color="#000000" bgColor="#ffffff" fontSize="10">
+    <math>
+      <input>
+        <e type="operand">σ2</e>
+        <e type="operand">1</e>
+        <e type="operator" args="2">:</e>
+      </input>
+    </math>
+  </region>
+  <region id="5" left="63" top="135" width="162" height="59" color="#000000" bgColor="#ffffff" fontSize="10">
+    <math>
+      <input>
+        <e type="operand">μ3</e>
+        <e type="operand">μ1</e>
+        <e type="operand">σ2</e>
+        <e type="operand">2</e>
+        <e type="operator" args="2">^</e>
+        <e type="operator" args="2">*</e>
+        <e type="operand">μ2</e>
+        <e type="operand">σ1</e>
+        <e type="operand">2</e>
+        <e type="operator" args="2">^</e>
+        <e type="operator" args="2">*</e>
+        <e type="operator" args="2">+</e>
+        <e type="operand">σ1</e>
+        <e type="operand">2</e>
+        <e type="operator" args="2">^</e>
+        <e type="operand">σ2</e>
+        <e type="operand">2</e>
+        <e type="operator" args="2">^</e>
+        <e type="operator" args="2">+</e>
+        <e type="operator" args="2">/</e>
+        <e type="operator" args="2">:</e>
+      </input>
+    </math>
+  </region>
+  <region id="6" left="252" top="144" width="130" height="52" color="#000000" bgColor="#ffffff" fontSize="10">
+    <math>
+      <input>
+        <e type="operand">σ3</e>
+        <e type="operand">σ1</e>
+        <e type="operand">σ2</e>
+        <e type="operator" args="2">*</e>
+        <e type="operand">σ1</e>
+        <e type="operand">2</e>
+        <e type="operator" args="2">^</e>
+        <e type="operand">σ2</e>
+        <e type="operand">2</e>
+        <e type="operator" args="2">^</e>
+        <e type="operator" args="2">+</e>
+        <e type="function" preserve="true" args="1">sqrt</e>
+        <e type="operator" args="2">/</e>
+        <e type="operator" args="2">:</e>
+      </input>
+    </math>
+  </region>
+  <region id="7" left="72" top="207" width="78" height="24" color="#000000" bgColor="#ffffff" fontSize="10">
+    <math>
+      <input>
+        <e type="operand">μ3</e>
+      </input>
+      <result action="numeric">
+        <e type="operand">0.2</e>
+      </result>
+    </math>
+  </region>
+  <region id="8" left="261" top="207" width="102" height="24" color="#000000" bgColor="#ffffff" fontSize="10">
+    <math>
+      <input>
+        <e type="operand">σ3</e>
+      </input>
+      <result action="numeric">
+        <e type="operand">0.4472</e>
+      </result>
+    </math>
+  </region>
+  <region id="9" left="36" top="279" width="163" height="26" color="#000000" bgColor="#ffffff" fontSize="10">
+    <math>
+      <input>
+        <e type="operand">x</e>
+        <e type="function" args="1">f1</e>
+        <e type="operand">x</e>
+        <e type="operand">μ1</e>
+        <e type="operand">σ1</e>
+        <e type="function" args="3">nr</e>
+        <e type="operator" args="2">:</e>
+      </input>
+    </math>
+  </region>
+  <region id="10" left="234" top="279" width="163" height="26" color="#000000" bgColor="#ffffff" fontSize="10">
+    <math>
+      <input>
+        <e type="operand">x</e>
+        <e type="function" args="1">f2</e>
+        <e type="operand">x</e>
+        <e type="operand">μ2</e>
+        <e type="operand">σ2</e>
+        <e type="function" args="3">nr</e>
+        <e type="operator" args="2">:</e>
+      </input>
+    </math>
+  </region>
+  <region id="11" left="414" top="279" width="163" height="26" color="#000000" bgColor="#ffffff" fontSize="10">
+    <math>
+      <input>
+        <e type="operand">x</e>
+        <e type="function" args="1">f3</e>
+        <e type="operand">x</e>
+        <e type="operand">μ3</e>
+        <e type="operand">σ3</e>
+        <e type="function" args="3">nr</e>
+        <e type="operator" args="2">:</e>
+      </input>
+    </math>
+  </region>
+  <region id="12" left="36" top="315" width="127" height="66" color="#000000" bgColor="#ffffff" fontSize="10">
+    <math>
+      <input>
+        <e type="operand">x</e>
+        <e type="function" args="1">f1</e>
+        <e type="operand">x</e>
+        <e type="operand">5</e>
+        <e type="operator" args="1">-</e>
+        <e type="operand">5</e>
+        <e type="function" preserve="true" args="4">int</e>
+      </input>
+      <result action="numeric">
+        <e type="operand">1</e>
+      </result>
+    </math>
+  </region>
+  <region id="13" left="180" top="315" width="127" height="66" color="#000000" bgColor="#ffffff" fontSize="10">
+    <math>
+      <input>
+        <e type="operand">x</e>
+        <e type="function" args="1">f2</e>
+        <e type="operand">x</e>
+        <e type="operand">5</e>
+        <e type="operator" args="1">-</e>
+        <e type="operand">5</e>
+        <e type="function" preserve="true" args="4">int</e>
+      </input>
+      <result action="numeric">
+        <e type="operand">1</e>
+      </result>
+    </math>
+  </region>
+  <region id="14" left="333" top="315" width="219" height="66" color="#000000" bgColor="#ffffff" fontSize="10">
+    <math>
+      <input>
+        <e type="operand">t</e>
+        <e type="function" args="1">f1</e>
+        <e type="operand">t</e>
+        <e type="function" args="1">f2</e>
+        <e type="operator" args="2">*</e>
+        <e type="bracket">(</e>
+        <e type="operand">t</e>
+        <e type="operand">5</e>
+        <e type="operator" args="1">-</e>
+        <e type="operand">5</e>
+        <e type="function" preserve="true" args="4">int</e>
+      </input>
+      <result action="numeric">
+        <e type="operand">0.2392</e>
+      </result>
+    </math>
+  </region>
+  <region id="15" left="36" top="387" width="139" height="127" color="#000000" bgColor="#ffffff" fontSize="10">
+    <math>
+      <input>
+        <e type="operand">mp</e>
+        <e type="operand">x</e>
+        <e type="function" args="1">f1</e>
+        <e type="operand">x</e>
+        <e type="function" args="1">f2</e>
+        <e type="operand">x</e>
+        <e type="function" args="1">f1</e>
+        <e type="operand">x</e>
+        <e type="function" args="1">f2</e>
+        <e type="operator" args="2">*</e>
+        <e type="operand">x</e>
+        <e type="function" args="1">f3</e>
+        <e type="operand">x</e>
+        <e type="function" args="1">f1</e>
+        <e type="operand">x</e>
+        <e type="function" args="1">f2</e>
+        <e type="operator" args="2">*</e>
+        <e type="operand">x</e>
+        <e type="function" args="1">f3</e>
+        <e type="operator" args="2">/</e>
+        <e type="operand">5</e>
+        <e type="operand">1</e>
+        <e type="function" preserve="true" args="7">sys</e>
+        <e type="operator" args="2">:</e>
+      </input>
+    </math>
+  </region>
+  <region id="16" left="45" top="531" width="651" height="387" color="#000000" bgColor="#ffffff" fontSize="10">
+    <plot type="2d" render="lines" scale_x="12.5281778152204" scale_y="12.5281778152204" scale_z="12.5281778152204" rotate_x="0" rotate_y="0" rotate_z="0" transpose_x="-51" transpose_y="11" transpose_z="0">
+      <input>
+        <e type="operand">mp</e>
+      </input>
+    </plot>
+  </region>
+</regions>

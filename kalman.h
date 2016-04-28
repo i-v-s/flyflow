@@ -1,6 +1,7 @@
-#ifndef KALMAN_H
+﻿#ifndef KALMAN_H
 #define KALMAN_H
-#include <eigen3/Eigen/Core>
+#include <Eigen/Core>
+#include <Eigen/LU>
 
 template<class T, int n>
 class Kalman
@@ -8,9 +9,10 @@ class Kalman
 public:
     typedef Eigen::Matrix<T, n, n> Matrix;
     typedef Eigen::Matrix<T, n, 1> Vector;
-    Matrix G_, Q_;
+	Matrix G_; // Матрица предсказания 
+	Matrix Q_; // Ковариация (шум) процесса
     Vector X_;
-    Matrix Sigma_;
+    Matrix Sigma_; // Текущая ковариация процесса
     Kalman()
     {
         G_.setIdentity();
@@ -30,7 +32,7 @@ public:
     }
 };
 
-template<class T, class H, int n, int k>
+template<class T, int n, int k>
 class Corrector
 {
 public:
@@ -40,21 +42,20 @@ public:
     {
         R_.setZero();
     }
-    /*virtual bool h(Eigen::Matrix<T, k, 1> & Z, const Eigen::Matrix<T, n, 1> & X)
+    virtual bool h(Eigen::Matrix<T, k, 1> * Z, Eigen::Matrix<T, k, n> * H_, const Eigen::Matrix<T, n, 1> & X)
     {
-        Z = H_ * X;
+        *Z = *H_ * X;
         return true;
-    }*/
+    }
 
-    void correct(Eigen::Matrix<T, n, 1> & x, Eigen::Matrix<T, n, n> & sigma, Eigen::Matrix<T, k, 1> z, H * h)
+    void correct(Eigen::Matrix<T, n, 1> & x, Eigen::Matrix<T, n, n> & sigma, Eigen::Matrix<T, k, 1> z)
     {
         Eigen::Matrix<T, k, 1> zt;
-        if(!h->h(&zt, &H_, x)) return;
+        if(!h(&zt, &H_, x)) return;
 
-        Eigen::Matrix<T, k, k> t = H_ * sigma * H_.transpose() + R_;
-        Eigen::Matrix<T, n, k> K = sigma * H_.transpose() * t.inverse();
+        Eigen::Matrix<T, k, k> S = H_ * sigma * H_.transpose() + R_;
+        Eigen::Matrix<T, n, k> K = sigma * H_.transpose() * S.inverse();
         x += K * (z - zt);
-        Eigen::Matrix<T, n, n> I();
         sigma = (Eigen::Matrix<T, n, n>::Identity() - K * H_) * sigma;
     }
 };

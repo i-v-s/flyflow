@@ -14,11 +14,11 @@ Conveyor::Conveyor(Visualizer *vis): gn_(0.2, 10), vis_(vis), pushHistory(true)
 
 //Visualizer vt("test");
 
-cv::Mat mulPose(const cv::Mat & p1, const cv::Mat & p2)
+/*cv::Mat mulPose(const cv::Mat & p1, const cv::Mat & p2)
 {
     cv::Mat v1 = p1(cv::Rect(0, 0, 2, 2));
 
-}
+}*/
 
 void Conveyor::onImage(const cv::Mat &mono)
 {    
