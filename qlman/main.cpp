@@ -11,6 +11,7 @@ int main(int argc, char *argv[])
     QObject * qml = engine.rootObjects().at(0);
     KalmanDraft kd;
     QObject::connect(qml, SIGNAL(doStep(double)),        &kd, SLOT(step(double)));
-    QObject::connect(&kd, SIGNAL(onFeature(QVariant, QVariant, QVariant, QVariant, QVariant, QVariant)), qml, SLOT(onFeature(QVariant, QVariant, QVariant, QVariant, QVariant, QVariant)));
+    QObject::connect(&kd, SIGNAL(onFeature(QVariant, QVariant, QVariant, QVariant, QVariant, QVariant, QVariant, QVariant)), qml, SLOT(onFeature(QVariant, QVariant, QVariant, QVariant, QVariant, QVariant, QVariant, QVariant)));
+    QObject::connect(&kd, SIGNAL(onPos(QVariant, QVariant, QVariant)), qml, SLOT(onPos(QVariant, QVariant, QVariant)));
     return app.exec();
 }

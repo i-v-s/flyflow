@@ -13,6 +13,8 @@ public:
     double dt;
     KalmanFeatures2D(double dt = 0.02): dt(dt)
     {
+        for(int x = 0; x < this->Sigma_.rows(); x++)
+            this->Sigma_(x, x) = 0.1;
         this->X_.setZero();
         this->G_(2, 3) = dt; // Крутим
         for(int x = 0; x < FC; x++) // Движение фич
@@ -20,7 +22,7 @@ public:
             this->G_(4 + x * 2, 0) = -dt;
             this->G_(5 + x * 2, 1) = -dt;
             this->Sigma_(4 + x * 2, 4 + x * 2) = 100; // Неизвестно, где они
-            this->Sigma_(4 + x * 2, 4 + x * 2) = 100;
+            this->Sigma_(5 + x * 2, 5 + x * 2) = 100;
 
         }
     }
@@ -36,17 +38,19 @@ public:
     }*/
 };
 
-
 class KalmanDraft : public QObject
 {
     Q_OBJECT
     //Q_PROPERTY( name READ name WRITE setName NOTIFY nameChanged)
     KalmanFeatures2D<2> k; // x1, y1, a
+    Eigen::Vector2d pos, vel;
+    double a;
+    Eigen::Vector2d fts[2];
 public:
     explicit KalmanDraft(QObject *parent = 0);
-
 signals:
-    void onFeature(QVariant num, QVariant x, QVariant y, QVariant sxx, QVariant sxy, QVariant syy);
+    void onFeature(QVariant num, QVariant x, QVariant y, QVariant sxx, QVariant sxy, QVariant syy, QVariant rx, QVariant ry);
+    void onPos(QVariant x, QVariant y, QVariant a);
 public slots:
     void step(double dt);
 };
