@@ -4,7 +4,7 @@
   <settings>
     <identity>
       <id>af59df53-138a-4268-b6d7-1497da221524</id>
-      <revision>8</revision>
+      <revision>10</revision>
     </identity>
     <calculation>
       <precision>4</precision>
@@ -26,7 +26,7 @@
       <assembly name="Picture Region" version="1.10.5935.13220" guid="06b5df04-393e-4be7-9107-305196fcb861" />
     </dependencies>
   </settings>
-  <region id="0" left="36" top="45" width="189" height="89" color="#000000" bgColor="#ffffff" fontSize="10">
+  <region id="0" left="36" top="45" width="149" height="89" color="#000000" bgColor="#ffffff" fontSize="10">
     <math>
       <input>
         <e type="operand">x</e>
@@ -59,7 +59,7 @@
       </input>
     </math>
   </region>
-  <region id="1" left="261" top="72" width="51" height="24" color="#000000" bgColor="#ffffff" fontSize="10">
+  <region id="1" left="261" top="72" width="43" height="24" color="#000000" bgColor="#ffffff" fontSize="10">
     <math>
       <input>
         <e type="operand">μ1</e>
@@ -68,7 +68,7 @@
       </input>
     </math>
   </region>
-  <region id="2" left="324" top="72" width="68" height="24" color="#000000" bgColor="#ffffff" fontSize="10">
+  <region id="2" left="324" top="72" width="59" height="24" color="#000000" bgColor="#ffffff" fontSize="10">
     <math>
       <input>
         <e type="operand">σ1</e>
@@ -77,7 +77,7 @@
       </input>
     </math>
   </region>
-  <region id="3" left="261" top="99" width="51" height="24" color="#000000" bgColor="#ffffff" fontSize="10">
+  <region id="3" left="261" top="99" width="43" height="24" color="#000000" bgColor="#ffffff" fontSize="10">
     <math>
       <input>
         <e type="operand">μ2</e>
@@ -86,7 +86,7 @@
       </input>
     </math>
   </region>
-  <region id="4" left="324" top="99" width="51" height="24" color="#000000" bgColor="#ffffff" fontSize="10">
+  <region id="4" left="324" top="99" width="43" height="24" color="#000000" bgColor="#ffffff" fontSize="10">
     <math>
       <input>
         <e type="operand">σ2</e>
@@ -95,7 +95,7 @@
       </input>
     </math>
   </region>
-  <region id="5" left="63" top="135" width="162" height="59" color="#000000" bgColor="#ffffff" fontSize="10">
+  <region id="5" left="63" top="135" width="134" height="59" color="#000000" bgColor="#ffffff" fontSize="10">
     <math>
       <input>
         <e type="operand">μ3</e>
@@ -122,7 +122,7 @@
       </input>
     </math>
   </region>
-  <region id="6" left="252" top="144" width="130" height="52" color="#000000" bgColor="#ffffff" fontSize="10">
+  <region id="6" left="252" top="144" width="110" height="52" color="#000000" bgColor="#ffffff" fontSize="10">
     <math>
       <input>
         <e type="operand">σ3</e>
@@ -142,7 +142,7 @@
       </input>
     </math>
   </region>
-  <region id="7" left="72" top="207" width="78" height="24" color="#000000" bgColor="#ffffff" fontSize="10">
+  <region id="7" left="72" top="207" width="65" height="24" color="#000000" bgColor="#ffffff" fontSize="10">
     <math>
       <input>
         <e type="operand">μ3</e>
@@ -152,7 +152,7 @@
       </result>
     </math>
   </region>
-  <region id="8" left="261" top="207" width="102" height="24" color="#000000" bgColor="#ffffff" fontSize="10">
+  <region id="8" left="261" top="207" width="89" height="24" color="#000000" bgColor="#ffffff" fontSize="10">
     <math>
       <input>
         <e type="operand">σ3</e>
@@ -162,7 +162,7 @@
       </result>
     </math>
   </region>
-  <region id="9" left="36" top="279" width="163" height="26" color="#000000" bgColor="#ffffff" fontSize="10">
+  <region id="9" left="36" top="279" width="131" height="26" color="#000000" bgColor="#ffffff" fontSize="10">
     <math>
       <input>
         <e type="operand">x</e>
@@ -175,7 +175,7 @@
       </input>
     </math>
   </region>
-  <region id="10" left="234" top="279" width="163" height="26" color="#000000" bgColor="#ffffff" fontSize="10">
+  <region id="10" left="234" top="279" width="131" height="26" color="#000000" bgColor="#ffffff" fontSize="10">
     <math>
       <input>
         <e type="operand">x</e>
@@ -188,7 +188,7 @@
       </input>
     </math>
   </region>
-  <region id="11" left="414" top="279" width="163" height="26" color="#000000" bgColor="#ffffff" fontSize="10">
+  <region id="11" left="414" top="279" width="131" height="26" color="#000000" bgColor="#ffffff" fontSize="10">
     <math>
       <input>
         <e type="operand">x</e>
@@ -201,7 +201,7 @@
       </input>
     </math>
   </region>
-  <region id="12" left="36" top="315" width="127" height="66" color="#000000" bgColor="#ffffff" fontSize="10">
+  <region id="12" left="36" top="315" width="98" height="66" color="#000000" bgColor="#ffffff" fontSize="10">
     <math>
       <input>
         <e type="operand">x</e>
@@ -217,7 +217,7 @@
       </result>
     </math>
   </region>
-  <region id="13" left="180" top="315" width="127" height="66" color="#000000" bgColor="#ffffff" fontSize="10">
+  <region id="13" left="180" top="315" width="98" height="66" color="#000000" bgColor="#ffffff" fontSize="10">
     <math>
       <input>
         <e type="operand">x</e>
@@ -233,7 +233,7 @@
       </result>
     </math>
   </region>
-  <region id="14" left="333" top="315" width="219" height="66" color="#000000" bgColor="#ffffff" fontSize="10">
+  <region id="14" left="333" top="315" width="181" height="66" color="#000000" bgColor="#ffffff" fontSize="10">
     <math>
       <input>
         <e type="operand">t</e>
@@ -253,7 +253,7 @@
       </result>
     </math>
   </region>
-  <region id="15" left="36" top="387" width="139" height="127" color="#000000" bgColor="#ffffff" fontSize="10">
+  <region id="15" left="36" top="387" width="119" height="127" color="#000000" bgColor="#ffffff" fontSize="10">
     <math>
       <input>
         <e type="operand">mp</e>
@@ -283,14 +283,37 @@
       </input>
     </math>
   </region>
-  <region id="16" left="45" top="531" width="651" height="387" color="#000000" bgColor="#ffffff" fontSize="10">
+  <region id="16" left="441" top="423" width="145" height="80" color="#000000" bgColor="#ffffff" fontSize="10">
+    <math exponentialThreshold="7">
+      <input>
+        <e type="operand">x</e>
+        <e type="operand">e</e>
+        <e type="operand">x</e>
+        <e type="operand">2</e>
+        <e type="operator" args="2">^</e>
+        <e type="operand">2</e>
+        <e type="operator" args="2">/</e>
+        <e type="operator" args="1">-</e>
+        <e type="operator" args="2">^</e>
+        <e type="operator" args="2">*</e>
+        <e type="operand">x</e>
+        <e type="operand">0</e>
+        <e type="operand">2</e>
+        <e type="function" preserve="true" args="4">int</e>
+      </input>
+      <result action="numeric">
+        <e type="operand">0.8647</e>
+      </result>
+    </math>
+  </region>
+  <region id="17" left="45" top="531" width="651" height="387" color="#000000" bgColor="#ffffff" fontSize="10">
     <plot type="2d" render="lines" scale_x="12.5281778152204" scale_y="12.5281778152204" scale_z="12.5281778152204" rotate_x="0" rotate_y="0" rotate_z="0" transpose_x="-75" transpose_y="-21" transpose_z="0">
       <input>
         <e type="operand">mp</e>
       </input>
     </plot>
   </region>
-  <region id="17" left="36" top="1080" width="103" height="44" color="#000000" bgColor="#ffffff" fontSize="10">
+  <region id="18" left="36" top="1080" width="89" height="44" color="#000000" bgColor="#ffffff" fontSize="10">
     <math>
       <input>
         <e type="operand">S</e>
@@ -305,7 +328,7 @@
       </input>
     </math>
   </region>
-  <region id="18" left="162" top="1080" width="53" height="44" color="#000000" bgColor="#ffffff" fontSize="10">
+  <region id="19" left="162" top="1080" width="45" height="44" color="#000000" bgColor="#ffffff" fontSize="10">
     <math>
       <input>
         <e type="operand">X</e>
@@ -318,7 +341,7 @@
       </input>
     </math>
   </region>
-  <region id="19" left="441" top="1080" width="70" height="44" color="#000000" bgColor="#ffffff" fontSize="10">
+  <region id="20" left="441" top="1080" width="61" height="44" color="#000000" bgColor="#ffffff" fontSize="10">
     <math>
       <input>
         <e type="operand">v</e>
@@ -331,7 +354,7 @@
       </input>
     </math>
   </region>
-  <region id="20" left="243" top="1098" width="187" height="44" color="#000000" bgColor="#ffffff" fontSize="10">
+  <region id="21" left="243" top="1098" width="171" height="44" color="#000000" bgColor="#ffffff" fontSize="10">
     <math>
       <input>
         <e type="operand">S</e>
@@ -348,7 +371,7 @@
       </input>
     </math>
   </region>
-  <region id="21" left="54" top="1152" width="293" height="118" color="#000000" bgColor="#ffffff" fontSize="10">
+  <region id="22" left="54" top="1152" width="245" height="118" color="#000000" bgColor="#ffffff" fontSize="10">
     <math>
       <input>
         <e type="operand">v</e>
@@ -399,7 +422,7 @@
       </input>
     </math>
   </region>
-  <region id="22" left="468" top="1170" width="258" height="46" color="#000000" bgColor="#ffffff" fontSize="10">
+  <region id="23" left="468" top="1170" width="215" height="46" color="#000000" bgColor="#ffffff" fontSize="10">
     <math>
       <input>
         <e type="operand">0.5</e>
@@ -421,7 +444,7 @@
       </result>
     </math>
   </region>
-  <region id="23" left="477" top="1260" width="240" height="66" color="#000000" bgColor="#ffffff" fontSize="10">
+  <region id="24" left="477" top="1260" width="181" height="66" color="#000000" bgColor="#ffffff" fontSize="10">
     <math error="2">
       <input>
         <e type="operand">a</e>
@@ -448,7 +471,7 @@
       </result>
     </math>
   </region>
-  <region id="24" left="54" top="1314" width="159" height="88" color="#000000" bgColor="#ffffff" fontSize="10">
+  <region id="25" left="54" top="1314" width="130" height="88" color="#000000" bgColor="#ffffff" fontSize="10">
     <math>
       <input>
         <e type="operand">mp</e>
@@ -475,7 +498,7 @@
       </input>
     </math>
   </region>
-  <region id="25" left="54" top="1413" width="322" height="311" color="#000000" bgColor="#ffffff" fontSize="10">
+  <region id="26" left="54" top="1413" width="322" height="311" color="#000000" bgColor="#ffffff" fontSize="10">
     <plot type="2d" render="lines" scale_x="15.391943247362" scale_y="15.391943247362" scale_z="15.391943247362" rotate_x="0" rotate_y="0" rotate_z="0" transpose_x="1" transpose_y="4" transpose_z="0">
       <input>
         <e type="operand">x</e>
@@ -489,7 +512,7 @@
       </input>
     </plot>
   </region>
-  <region id="26" left="405" top="1431" width="355" height="297" color="#000000" bgColor="#ffffff" fontSize="10">
+  <region id="27" left="405" top="1431" width="355" height="297" color="#000000" bgColor="#ffffff" fontSize="10">
     <plot type="2d" render="lines" scale_x="15.8630929717149" scale_y="15.8630929717149" scale_z="15.8630929717149" rotate_x="0" rotate_y="0" rotate_z="0" transpose_x="18" transpose_y="-6" transpose_z="0">
       <input>
         <e type="operand">0</e>
@@ -503,7 +526,7 @@
       </input>
     </plot>
   </region>
-  <region id="27" left="54" top="1935" width="392" height="259" color="#000000" bgColor="#ffffff" fontSize="10">
+  <region id="28" left="54" top="1935" width="392" height="259" color="#000000" bgColor="#ffffff" fontSize="10">
     <plot type="3d" render="lines" scale_x="6847.77858564025" scale_y="6847.77858564025" scale_z="6847.77858564025" rotate_x="-120" rotate_y="-96" rotate_z="-2" transpose_x="0" transpose_y="0" transpose_z="0">
       <input>
         <e type="operand">x</e>
@@ -522,7 +545,7 @@
       </input>
     </plot>
   </region>
-  <region id="28" left="495" top="1998" width="194" height="66" color="#000000" bgColor="#ffffff" fontSize="10">
+  <region id="29" left="495" top="1998" width="148" height="66" color="#000000" bgColor="#ffffff" fontSize="10">
     <math error="2">
       <input>
         <e type="operand">a</e>
@@ -544,9 +567,9 @@
       </result>
     </math>
   </region>
-  <region id="29" left="45" top="2331" width="410" height="181" color="#000000" bgColor="#ffffff">
+  <region id="30" left="45" top="2331" width="410" height="181" color="#000000" bgColor="#ffffff">
     <picture readOnly="false">
-      <raw format="png" encoding="base64">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</raw>
+      <raw format="png" encoding="base64">iVBORw0KGgoAAAANSUhEUgAAAZIAAACtCAYAAACa2fk2AAAABGdBTUEAALGPC/xhBQAAAAFzUkdCAK7OHOkAAAAgY0hSTQAAeiYAAICEAAD6AAAAgOgAAHUwAADqYAAAOpgAABdwnLpRPAAAAnpJREFUeJzt1TENADAMwLDyJ72CyDFVshHkyzwACOZ3AAC3GQkAiZEAkBgJAImRAJAYCQCJkQCQGAkAiZEAkBgJAImRAJAYCQCJkQCQGAkAiZEAkBgJAImRAJAYCQCJkQCQGAkAiZEAkBgJAImRAJAYCQCJkQCQGAkAiZEAkBgJAImRAJAYCQCJkQCQGAkAiZEAkBgJAImRAJAYCQCJkQCQGAkAiZEAkBgJAImRAJAYCQCJkQCQGAkAiZEAkBgJAImRAJAYCQCJkQCQGAkAiZEAkBgJAImRAJAYCQCJkQCQGAkAiZEAkBgJAImRAJAYCQCJkQCQGAkAiZEAkBgJAImRAJAYCQCJkQCQGAkAiZEAkBgJAImRAJAYCQCJkQCQGAkAiZEAkBgJAImRAJAYCQCJkQCQGAkAiZEAkBgJAImRAJAYCQCJkQCQGAkAiZEAkBgJAImRAJAYCQCJkQCQGAkAiZEAkBgJAImRAJAYCQCJkQCQGAkAiZEAkBgJAImRAJAYCQCJkQCQGAkAiZEAkBgJAImRAJAYCQCJkQCQGAkAiZEAkBgJAImRAJAYCQCJkQCQGAkAiZEAkBgJAImRAJAYCQCJkQCQGAkAiZEAkBgJAImRAJAYCQCJkQCQGAkAiZEAkBgJAImRAJAYCQCJkQCQGAkAiZEAkBgJAImRAJAYCQCJkQCQGAkAiZEAkBgJAImRAJAYCQCJkQCQGAkAiZEAkBgJAImRAJAYCQCJkQCQGAkAiZEAkBgJAImRAJAYCQCJkQCQGAkAiZEAkBgJAImRAJAYCQCJkQCQGAkAiZEAkBgJAImRAJAYCQCJkQCQGAkAiZEAkBgJAMkCpKyov+/LmroAAAAASUVORK5CYII=</raw>
     </picture>
   </region>
 </regions>
