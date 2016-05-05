@@ -2,27 +2,9 @@
 #include <gtest/gtest.h>
 #include <cstdlib>
 
-double rnd(double min, double max)
+double rnd1(double min, double max)
 {
 	return ((double) rand() / RAND_MAX) * (max - min) + min;
-}
-
-//Подпрограмма нормального распределения - возв СВ по гауссу с МО 0 и дисп 1.                
-double rand_norm()
-{
-	static double r;
-	static bool flag = false;
-	if(flag) { flag = false; return(r);	}
-	while(1)
-	{
-		double v1 = rnd(-1, 1), v2 = rnd(-1, 1), s = v1 * v1 + v2 * v2;
-		if(s <= 1.0 && s > 0.0)
-		{
-			r = v1 * sqrt(-2.0 * log(s) / s); //за один раз получаем 2 СВ
-			flag = 1;
-			return v2 * sqrt(-2.0 * log(s) / s);
-		}
-	}
 }
 
 TEST(KalmanTest, gauss_mul)
@@ -30,10 +12,10 @@ TEST(KalmanTest, gauss_mul)
 	srand(5);
 	for (int x = 0; x < 100; x++)
 	{
-		double u1 = rnd(-10, 10); // Матожидания
-		double u2 = rnd(-10, 10);
-		double s1 = rnd(0.01, 10); // Дисперсии
-		double s2 = rnd(0.01, 10);
+		double u1 = rnd1(-10, 10); // Матожидания
+		double u2 = rnd1(-10, 10);
+		double s1 = rnd1(0.01, 10); // Дисперсии
+		double s2 = rnd1(0.01, 10);
 
 		Kalman<double, 1> k;
 		EXPECT_DOUBLE_EQ(k.Sigma_(0, 0), 0.0);
@@ -58,7 +40,7 @@ TEST(KalmanTest, gauss_mul)
 TEST(KalmanTest, slam1d)
 {
 	Kalman<double, 4> k;
-	k.X_ << 0.0, 1.0, rnd(0, 10), rnd(0, 10); // Позиция, скорость, метка1, метка2
+	k.X_ << 0.0, 1.0, rnd1(0, 10), rnd1(0, 10); // Позиция, скорость, метка1, метка2
 	double dt = 0.1;
 	k.G_(1, 0) = dt; // позиция = позиция + скорость * dt
 	k.Sigma_(0, 0) = 0.1;

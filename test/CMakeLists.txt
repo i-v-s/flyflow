@@ -20,6 +20,7 @@ add_executable(flyflow_test test.cpp
 	../frame.cpp 
 	../visualizer.cpp 
 	../jacobi.cpp
+	../normdist.cpp ../normdist.h
 	../kalman.cpp ../kalman.h
 )
 
