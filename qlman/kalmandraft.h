@@ -49,7 +49,7 @@ class KalmanDraft : public QObject
 public:
     explicit KalmanDraft(QObject *parent = 0);
 signals:
-    void onFeature(QVariant num, QVariant x, QVariant y, QVariant sxx, QVariant sxy, QVariant syy, QVariant rx, QVariant ry);
+    void onFeature(QVariant num, QVariant x, QVariant y, QVariant a, QVariant radx, QVariant rady, QVariant rx, QVariant ry);
     void onPos(QVariant x, QVariant y, QVariant a);
 public slots:
     void step(double dt);

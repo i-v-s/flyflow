@@ -5,7 +5,8 @@ QT += qml quick widgets
 CONFIG += c++11
 
 SOURCES += main.cpp \
-    kalmandraft.cpp
+    kalmandraft.cpp \
+    ../normdist.cpp
 
 RESOURCES += qml.qrc
 
@@ -17,4 +18,6 @@ include(deployment.pri)
 
 HEADERS += \
     ../kalman.h \
-    kalmandraft.h
+    kalmandraft.h \
+    ../normdist.h
+

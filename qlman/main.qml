@@ -13,6 +13,15 @@ ApplicationWindow {
     property double py: 0
     property double pa: 0
     signal doStep(double dt)
+    function ellipse(ctx, cx, cy, rx, ry, a)
+    {
+        ctx.save()
+        ctx.translate(cx, cy)
+        ctx.rotate(a)
+        ctx.ellipse(-rx, -ry, rx * 2, ry * 2)
+        ctx.stroke()
+        ctx.restore()
+    }
 
     menuBar: MenuBar {
         Menu {
@@ -40,25 +49,18 @@ ApplicationWindow {
             ctx.fillStyle = Qt.rgba(1.0, 0.0, 0.0, 1);
             ctx.fillRect(w2 + tx - 2, h2 - ty - 2, 5, 5);
 
+            //ellipse(ctx, w2, h2, 20, 40, 3.14159 / 4);
             for(var n in fts)
             {
                 var f = fts[n];
-                var a = Math.atan2(f.m, f.my - f.mx) / 2;
-                ctx.save();
-                //ctx.translate(w2 + f.x, h2 + f.y)
-                ctx.rotate(a);
-                //ctx.translate(-ellipse.center.x, -ellipse.center.y)
-                ctx.ellipse(w2, h2, f.mx, f.my);
-                ctx.stroke();
-                ctx.restore();
-                //ctx.fillRect(width / 2 + fts[n].x - 2, height / 2 - fts[n].y - 2, 5, 5);
+                ellipse(ctx, w2 + tx + f.x, h2 - f.y - ty, f.radx, f.rady, f.a)
             }
 
             ctx.fillStyle = Qt.rgba(0.0, 0.0, 0.0, 1);
             ctx.beginPath();
             for(var n in fts)
             {
-                var f = fts[n];
+                f = fts[n];
                 ctx.ellipse(w2 + f.rx, h2 - f.ry, 5, 5);
             }
             ctx.fill();
@@ -73,10 +75,9 @@ ApplicationWindow {
             doStep(dt);
         }
     }
-    function onFeature(n, x, y, sxx, sxy, syy, rx, ry) {
-        var d = 1 / (sxx * syy - sxy * sxy);
+    function onFeature(n, x, y, a, radx, rady, rx, ry) {
 
-        fts[n] = {x: x, y: y, mx: syy * d, m: -sxy * d, my: sxx * d, rx: rx, ry: ry};
+        fts[n] = {x: x, y: y, a: a, radx: radx, rady: rady, rx: rx, ry: ry};
         mycanvas.requestPaint();
         /*var ctx = mycanvas.getContext("2d");
         var w = mycanvas.width, h = mycanvas.height;
