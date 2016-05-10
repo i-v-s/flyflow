@@ -5,15 +5,27 @@ KalmanDraft::KalmanDraft(QObject *parent) : QObject(parent),
    a(0)
 {
     pos << 0, 0;
-    vel << 1, 1;
+    vel << 0.3, 2;
+    k.X_(0) = vel(0);
+    k.X_(1) = vel(1);
     fts[0] << 20, 30;
-    fts[1] << -30, 20;
+    fts[1] << 50, 20;
+    fts[2] << 60, 50;
+    fts[3] << 30, 50;
 }
 
 void KalmanDraft::step(double dt)
 {
     pos += vel * dt;
     k.predict();
+    int n = sizeof(fts) / sizeof(*fts);
+    Eigen::Matrix<double, 4, 1> z;
+    for(int x = 0; x < n; x++)
+    {
+        Eigen::Vector2d fp = fts[x] - pos;
+        z(x) = atan2(fp(1), fp(0));// + a;
+    }
+    k.correct(z);
     for(int n = 4; n < k.X_.rows(); n += 2)
     {
         int N = (n - 4) / 2;
