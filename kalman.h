@@ -3,7 +3,7 @@
 #include <Eigen/Core>
 #include <Eigen/LU>
 
-template<class T, int n>
+template<class T, int n, int k>
 class Kalman
 {
 public:
@@ -13,11 +13,14 @@ public:
 	Matrix Q_; // Ковариация (шум) процесса
     Vector X_;
     Matrix Sigma_; // Текущая ковариация процесса
+    Eigen::Matrix<T, k, n> H_; //
+    Eigen::Matrix<T, k, k> R_;
     Kalman()
     {
         G_.setIdentity();
         Q_.setZero();
         Sigma_.setZero();
+        R_.setZero();
     }
 
     virtual void g(Vector & newX, const Vector & X)
@@ -30,33 +33,20 @@ public:
         g(X_, X);
         Sigma_ = G_ * Sigma_ * G_.transpose() + Q_;
     }
-};
-
-template<class T, int n, int k>
-class Corrector
-{
-public:
-    Eigen::Matrix<T, k, n> H_;
-    Eigen::Matrix<T, k, k> R_;
-    Corrector()
-    {
-        R_.setZero();
-    }
     virtual bool h(Eigen::Matrix<T, k, 1> * Z, Eigen::Matrix<T, k, n> * H_, const Eigen::Matrix<T, n, 1> & X)
     {
         *Z = *H_ * X;
         return true;
     }
-
-    void correct(Eigen::Matrix<T, n, 1> & x, Eigen::Matrix<T, n, n> & sigma, Eigen::Matrix<T, k, 1> z)
+    void correct(Eigen::Matrix<T, k, 1> z)
     {
         Eigen::Matrix<T, k, 1> zt;
-        if(!h(&zt, &H_, x)) return;
+        if(!h(&zt, &H_, X_)) return;
 
-        Eigen::Matrix<T, k, k> S = H_ * sigma * H_.transpose() + R_;
-        Eigen::Matrix<T, n, k> K = sigma * H_.transpose() * S.inverse();
-        x += K * (z - zt);
-        sigma = (Eigen::Matrix<T, n, n>::Identity() - K * H_) * sigma;
+        Eigen::Matrix<T, k, k> S = H_ * Sigma_ * H_.transpose() + R_;
+        Eigen::Matrix<T, n, k> K = Sigma_ * H_.transpose() * S.inverse();
+        X_ += K * (z - zt);
+        Sigma_ = (Eigen::Matrix<T, n, n>::Identity() - K * H_) * Sigma_;
     }
 };
 
