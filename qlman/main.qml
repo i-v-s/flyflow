@@ -17,7 +17,7 @@ ApplicationWindow {
     {
         ctx.save()
         ctx.translate(cx, cy)
-        ctx.rotate(a)
+        ctx.rotate(-a)
         ctx.ellipse(-rx, -ry, rx * 2, ry * 2)
         ctx.stroke()
         ctx.restore()
