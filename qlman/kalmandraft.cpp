@@ -8,10 +8,10 @@ KalmanDraft::KalmanDraft(QObject *parent) : QObject(parent),
     vel << 0.3, 2;
     k.X_(0) = vel(0);
     k.X_(1) = vel(1);
-    fts[0] << 20, 30;
-    fts[1] << 50, 20;
+    fts[0] << 40, 30;
+    fts[1] << 80, 20;
     fts[2] << 60, 50;
-    fts[3] << 30, 50;
+    fts[3] << 50, 100;
 }
 
 void KalmanDraft::step(double dt)

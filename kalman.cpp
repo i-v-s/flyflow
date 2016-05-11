@@ -36,6 +36,33 @@ TEST(KalmanTest, gauss_mul)
 	}
 }
 
+TEST(KalmanTest, speed) // Сможет ли фильтр Кальмана измерить скорость?
+{
+	double dt = 0.1, v = 1.0; // Квант времени, скорость
+	Kalman<double, 2, 1> k;
+	k.X_ << 0.0, 0.0; // Положение, скорость
+	k.G_(0, 1) = dt; // Задаём движение
+	k.Q_(0, 0) = 0.1; // Нарастание неопределённости положения
+	k.Q_(1, 1) = 0.1; // Нарастание неопределённости скорости
+	k.Sigma_(1, 1) = 10; // Мы не знаем, какая скорость
+	k.H_ << 1.0, 0.0; // Измеряем положение
+	k.R_ << 0.1; // Шум измерения
+	using namespace std;
+	Eigen::Matrix<double, 1, 1> z;
+	for (double t = 0; t < 10; t += dt)
+	{
+		z(0) = v * t;
+		/*cout << endl << "t = " << t << endl;
+		cout << "Z = " << z.transpose() << endl;
+		cout << "X = " << k.X_.transpose() << endl;
+		cout << "Sigma =" << endl << k.Sigma_ << endl;*/
+		k.predict();
+		k.correct(z);
+	}
+	EXPECT_NEAR(k.X_(1),    v, 0.0001);
+	EXPECT_NEAR(k.X_(0), z(0), 0.0001);
+}
+
 TEST(KalmanTest, slam1d)
 {
 	Kalman<double, 4, 2> k;
@@ -63,8 +90,8 @@ TEST(KalmanTest, slam1d)
 	{
 		z(0) = mark1 - k.X_(0);
 		z(1) = mark2 - k.X_(1);
-		std::cout << "X =" << std::endl << k.X_ << std::endl;
-		std::cout << "Sigma =" << std::endl << k.Sigma_ << std::endl;
+		//std::cout << "X =" << std::endl << k.X_ << std::endl;
+		//std::cout << "Sigma =" << std::endl << k.Sigma_ << std::endl;
 		k.predict();
 		k.correct(z);
 
