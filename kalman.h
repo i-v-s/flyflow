@@ -11,10 +11,10 @@ public:
     typedef Eigen::Matrix<T, n, 1> Vector;
 	Matrix G_; // Матрица предсказания 
 	Matrix Q_; // Ковариация (шум) процесса
-    Vector X_;
+    Vector X_; // Вектор состояния
     Matrix Sigma_; // Текущая ковариация процесса
-    Eigen::Matrix<T, k, n> H_; //
-    Eigen::Matrix<T, k, k> R_;
+    Eigen::Matrix<T, k, n> H_; // Матрица измерения
+    Eigen::Matrix<T, k, k> R_; // Ковариация (шум) измерения
     Kalman()
     {
         G_.setIdentity();
@@ -22,7 +22,6 @@ public:
         Sigma_.setZero();
         R_.setZero();
     }
-
     virtual void g(Vector & newX, const Vector & X)
     {
         newX = G_ * X;

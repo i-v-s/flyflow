@@ -6,6 +6,7 @@ KalmanDraft::KalmanDraft(QObject *parent) : QObject(parent),
 {
     pos << 0, 0;
     vel << 0.3, 2;
+    acc.setZero();
     k.X_(0) = vel(0);
     k.X_(1) = vel(1);
     fts[0] << 40, 30;
@@ -17,7 +18,10 @@ KalmanDraft::KalmanDraft(QObject *parent) : QObject(parent),
 void KalmanDraft::step(double dt)
 {
     pos += vel * dt;
+    vel += acc * dt;
     k.predict();
+    k.X_(0) += acc(0) * dt;
+    k.X_(1) += acc(1) * dt;
     int n = sizeof(fts) / sizeof(*fts);
     Eigen::Matrix<double, 4, 1> z;
     for(int x = 0; x < n; x++)
@@ -39,4 +43,9 @@ void KalmanDraft::step(double dt)
     }
     QVariant tx(pos(0)), ty(pos(1)), ta(a);
     emit onPos(tx, ty, ta);
+}
+
+void KalmanDraft::setAccel(double ax, double ay)
+{
+    acc << ax, ay;
 }

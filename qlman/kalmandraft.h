@@ -19,20 +19,20 @@ public:
         this->X_.setZero();
         this->G_(2, 3) = dt; // Крутим
 
-        //this->Q_(0, 0) = 0.1; // Шум скорости
-        //this->Q_(1, 1) = 0.1; //
+        this->Q_(0, 0) = 0.1; // Шум скорости
+        this->Q_(1, 1) = 0.1; //
         for(int x = 0; x < FC; x++) // Движение фич
         {
             this->G_(4 + x * 2, 0) = -dt;
             this->G_(5 + x * 2, 1) = -dt;
             this->X_(4 + x * 2) = ((double)rand() / RAND_MAX) * 200.0 - 100.0;
             this->X_(5 + x * 2) = ((double)rand() / RAND_MAX) * 200.0 - 100.0;
-            this->Sigma_(4 + x * 2, 4 + x * 2) = 1000; // Неизвестно, где они
-            this->Sigma_(5 + x * 2, 5 + x * 2) = 1000;
-            this->R_(x, x) = 0.3;
-            int t = 4 + x * 2;
-            this->Q_(t, t) = 0.05;
-            this->Q_(t + 1, t + 1) = 0.05;
+            this->Sigma_(4 + x * 2, 4 + x * 2) = 10000; // Неизвестно, где они
+            this->Sigma_(5 + x * 2, 5 + x * 2) = 10000;
+            this->R_(x, x) = 0.01; // Шум измерения
+            //int t = 4 + x * 2;
+            //this->Q_(t, t) = 0.05; // Шум фич
+            //this->Q_(t + 1, t + 1) = 0.05;
         }
     }
     bool h(Eigen::Matrix<double, FC, 1> * Z, Eigen::Matrix<double, FC, 4 + FC * 2> * H_, const Eigen::Matrix<double, 4 + FC * 2, 1> & X)
@@ -52,9 +52,8 @@ public:
 class KalmanDraft : public QObject
 {
     Q_OBJECT
-    //Q_PROPERTY( name READ name WRITE setName NOTIFY nameChanged)
     KalmanFeatures2D<4> k; // x1, y1, a
-    Eigen::Vector2d pos, vel;
+    Eigen::Vector2d pos, vel, acc; // Реальные позиция, скорость, ускорение
     double a;
     Eigen::Vector2d fts[4];
 public:
@@ -64,6 +63,7 @@ signals:
     void onPos(QVariant x, QVariant y, QVariant a);
 public slots:
     void step(double dt);
+    void setAccel(double ax, double ay);
 };
 
 #endif // KALMANDRAFT_H

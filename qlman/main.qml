@@ -13,6 +13,7 @@ ApplicationWindow {
     property double py: 0
     property double pa: 0
     signal doStep(double dt)
+    signal setAccel(double ax, double ay)
     function ellipse(ctx, cx, cy, rx, ry, a)
     {
         ctx.save()
@@ -64,6 +65,23 @@ ApplicationWindow {
                 ctx.ellipse(w2 + f.rx, h2 - f.ry, 5, 5);
             }
             ctx.fill();
+        }
+        MouseArea {
+            anchors.fill: parent
+            property double ox: 0;
+            property double oy: 0;
+            onPositionChanged: {
+                var w2 = width / 2, h2 = height / 2;
+                var kp = 2, kd = 10;
+                var tx = px, ty = py;
+                var ax = (mouse.x - tx - w2) * kp;
+                var ay = (h2 - ty - mouse.y) * kp;
+                ax += (ox - tx) * kd;
+                ay += (oy - ty) * kd;
+                setAccel(ax, ay);
+                ox = tx;
+                oy = ty;
+            }
         }
     }
     Timer {
