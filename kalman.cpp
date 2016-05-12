@@ -7,6 +7,31 @@ double rnd1(double min, double max)
 	return ((double) rand() / RAND_MAX) * (max - min) + min;
 }
 
+TEST(KalmanTest, base_linearity)
+{
+	constexpr int n = 10, k = 7;
+	Kalman<double, n, k> kf;
+	for (int x = 0; x < n; x++)
+	{
+		kf.X_(x) = rnd1(-10, 10);
+		for (int y = 0; y < n; y++)
+			kf.G_(x, y) = rnd1(-10, 10);
+		for (int y = 0; y < k; y++)
+			kf.H_(y, x) = rnd1(-10, 10);
+	}
+	Eigen::Matrix<double, n, n> G;
+	Eigen::Matrix<double, k, n> H;
+	kf.calcG(G);
+	kf.calcH(H);
+	for (int x = 0; x < n; x++)
+	{
+		for (int y = 0; y < n; y++)
+			EXPECT_NEAR(kf.G_(x, y), G(x, y), 1E-10);
+		for (int y = 0; y < k; y++)
+			EXPECT_NEAR(kf.H_(y, x), H(y, x), 1E-10);
+	}
+}
+
 TEST(KalmanTest, gauss_mul)
 {
 	srand(5);

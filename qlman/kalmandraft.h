@@ -35,15 +35,15 @@ public:
             //this->Q_(t + 1, t + 1) = 0.05;
         }
     }
-    bool h(Eigen::Matrix<double, FC, 1> * Z, Eigen::Matrix<double, FC, 4 + FC * 2> * H_, const Eigen::Matrix<double, 4 + FC * 2, 1> & X)
+    bool h(Eigen::Matrix<double, FC, 1> & z)
     {
         for(int f = 0; f < FC; f++)
         {
-            double x = X(4 + f * 2), y = X(5 + f * 2), d = y / x;
-            (*Z)(f) = atan2(y, x);// + X(2);
-            (*H_)(f, 2) = 0;//1;
-            (*H_)(f, 4 + f * 2) = -y / ((1 + d * d) * x * x); // (atan x)' = 1 / (1 + x^2)
-            (*H_)(f, 5 + f * 2) =  1 / ((1 + d * d) * x);
+            double x = this->X_(4 + f * 2), y = this->X_(5 + f * 2), d = y / x;
+            z(f) = atan2(y, x) + this->X_(2);
+            this->H_(f, 2) = 1;
+            this->H_(f, 4 + f * 2) = -y / ((1 + d * d) * x * x); // (atan x)' = 1 / (1 + x^2)
+            this->H_(f, 5 + f * 2) =  1 / ((1 + d * d) * x);
         }
         return true;
     }
