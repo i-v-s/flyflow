@@ -134,6 +134,7 @@ double Conveyor::solve(const Frame8 &f0, const Frame8 &f1, cv::Mat &pose)
             gn_.solve(*i0, *i1, j->get(), pose);
         //solveLevel(*i0, *i1, *j, pose);
     }
+    return 0.0;
 }
 
 void Conveyor::initJacobi(int size)
