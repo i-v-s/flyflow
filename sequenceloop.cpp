@@ -14,13 +14,13 @@ TEST(SequenceLoopTest, first_last)
     SequenceLoop<Data, 16> sl;
     EXPECT_FALSE(sl.last());
     EXPECT_FALSE(sl.first());
-    auto t = sl.push(1.0);
+    auto t = sl.add(1.0);
     EXPECT_TRUE(t);
     EXPECT_TRUE(sl.last());
     EXPECT_TRUE(sl.first());
     EXPECT_EQ(sl.last(), t);
     EXPECT_EQ(sl.first(), sl.last());
-    auto t2 = sl.push(2.0);
+    auto t2 = sl.add(2.0);
     EXPECT_EQ(sl.last(), t);
     EXPECT_EQ(sl.first(), t2);
 }
@@ -28,15 +28,16 @@ TEST(SequenceLoopTest, first_last)
 TEST(SequenceLoopTest, findBeforeBasic)
 {
     SequenceLoop<Data, 16> sl;
-    EXPECT_FALSE(sl.findBefore(1.0));
-    sl.push(1.0);
-    EXPECT_FALSE(sl.findBefore(0.5));
-    EXPECT_FALSE(sl.findBefore(1.0));
-    EXPECT_TRUE(sl.findBefore(1.5));
-    sl.push(2.0);
+    EXPECT_EQ(sl.findBefore(1.0), sl.end());
+    sl.add(1.0);
+    EXPECT_EQ(sl.findBefore(0.5), sl.end());
+    EXPECT_EQ(sl.findBefore(1.0), sl.end());
+    EXPECT_NE(sl.findBefore(1.5), sl.end());
+    sl.add(2.0);
     auto d1 = sl.findBefore(1.5);
     auto d2 = sl.findBefore(2.5);
-    EXPECT_TRUE(d1 && d2);
+    EXPECT_NE(d1, sl.end());
+    EXPECT_NE(d2, sl.end());
     EXPECT_EQ(d1->time(), 1.0);
     EXPECT_EQ(d2->time(), 2.0);
 }
@@ -50,13 +51,13 @@ TEST(SequenceLoopTest, findBefore)
         {
             Data * d = sl.findBefore(0.5 + y);
             if(0.5 + y < 1.0)
-                EXPECT_FALSE(d);
+                EXPECT_EQ(d, sl.end());
             else
-                EXPECT_TRUE(d);
-            if(d)
+                EXPECT_NE(d, sl.end());
+            if(d != sl.end())
                 EXPECT_EQ(d->time(), y);
         }
-        sl.push(1.0 + x);
+        sl.add(1.0 + x);
     }
 }
 
@@ -70,13 +71,13 @@ TEST(SequenceLoopTest, findBeforeLoop)
             Data *last = sl.last();//, *first = sl.first();
             Data * d = sl.findBefore(0.5 + y);
             if(last && 0.5 + y > last->time())
-                EXPECT_TRUE(d);
+                EXPECT_TRUE(d != sl.end());
             else
-                EXPECT_FALSE(d);
-            if(d)
+                EXPECT_FALSE(d != sl.end());
+            if(d != sl.end())
                 EXPECT_EQ(d->time(), y);
         }
-        sl.push(1.0 + x);
+        sl.add(1.0 + x);
     }
 }
 
@@ -97,13 +98,13 @@ TEST(SequenceLoopTest, popDestruct)
     };
     int ctr = 0;
     SequenceLoop<Data, 32> sl;
-    sl.push(ctr);
+    sl.add(ctr);
     EXPECT_EQ(ctr, 1);
-    sl.push(ctr);
+    sl.add(ctr);
     EXPECT_EQ(ctr, 2);
-    sl.pop();
+    sl.drop();
     EXPECT_EQ(ctr, 1);
-    sl.pop();
+    sl.drop();
     EXPECT_EQ(ctr, 0);
     //ASSERT_DEATH({ sl.pop();}, "Assertion failed!");
     //EXPECT_EQ(ctr, 0);
@@ -127,8 +128,8 @@ TEST(SequenceLoopTest, destructor)
     int ctr = 0;
     {
         SequenceLoop<Data, 32> sl;
-        sl.push(ctr);
-        sl.push(ctr);
+        sl.add(ctr);
+        sl.add(ctr);
         EXPECT_EQ(ctr, 2);
     }
     EXPECT_EQ(ctr, 0);

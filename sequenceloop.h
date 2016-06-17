@@ -9,16 +9,16 @@
 
 ****************************************/
 
-template<typename Data, int SIZE>
+template<typename Data, int SIZE = 64>
 class SequenceLoop
 {
 private:
-    struct Item { char buf[sizeof(Data)]; };
-    Item data[SIZE];
-    Item * volatile src, * volatile dst;
-    template<typename Time> Data * findBeforeIn(Time time, Data *begin, Data *end)
+    struct Place { char buf[sizeof(Data)]; };
+    Place data[SIZE];
+    Place * volatile src, * volatile dst;
+    template<typename Time> Data * findBeforeIn(Time time, Data *b, Data *e)
     {
-        auto left = begin, right = end - 1;
+        auto left = b, right = e - 1;
         while( left < right )
         {
             Data *mid = left + (right - left) / 2;
@@ -28,34 +28,36 @@ private:
         while( left->time() >= time )
         {
             left--;
-            if(left < begin) return nullptr;
+            if(left < b) return end();
         }
         return left;
     }
 public:
+    typedef Data value_type;
+    typedef Data *iterator;
     SequenceLoop() : src(data), dst(data) {}
     ~SequenceLoop()
     {
-        for(Item *s = src, *d = dst; s != d;)
+        for(Place *s = src, *d = dst; s != d;)
         {
             ((Data *)s++)->~Data();
             if(s >= data + SIZE) s = data;
         }
     }
-    inline bool empty() { return src == dst; }
-    template <class... Args> Data * push(Args&&... args)
+    inline bool empty() const { return src == dst; }
+    template <class... Args> Data * add(Args&&... args)
     {
-        Item *d = dst;
+        Place *d = dst;
         int empty = (src - d - 1) & (SIZE - 1);
-        if(!empty) pop();
+        if(!empty) drop();
         Data * res = new (d++) Data(args...);
         if(d >= data + SIZE) d = data;
         dst = d;
         return res;
     }
-    void pop()
+    void drop()
     {
-        Item *s = src;
+        Place *s = src;
         if(s == dst)
         {
             assert(!"SequenceLoop::pop(): empty buffer");
@@ -66,11 +68,11 @@ public:
         if(s >= data + SIZE) s = data;
         src = s;
     }
-    template<typename Time> Data * findBefore(Time t)
+    template<typename Time> iterator findBefore(Time t)
     {
         Data *d = (Data *)dst, *s = (Data *)src;
         if(s == d || s->time() > t)
-            return nullptr;
+            return end();
         if(s < d)
             return findBeforeIn(t, s, d);
         if(d > (Data *)data && ((Data *)data)->time() < t)
@@ -79,16 +81,29 @@ public:
     }
     inline Data * last()
     {
-        Item *s = src;
+        Place *s = src;
         if(s == dst) return nullptr;
         return (Data *) s;
     }
     inline Data * first()
     {
-        Item *d = dst;
+        Place *d = dst;
         if(d == src) return nullptr;
         if(--d < data) d += SIZE;
         return (Data *) d;
-    }};
+    }
+    inline iterator begin() {return (iterator) src;}
+    inline iterator end() {return (iterator) dst;}
+    inline void inc(iterator &i) const
+    {
+        if(++i >= (Data *)data + SIZE) i = (Data *)data;
+    }
+    inline iterator sub1(iterator i) const
+    {
+        return (i == (Data *)data) ? (Data *)data + SIZE - 1 : (i - 1);
+    }
+    inline Data &back()             { assert(!empty()); return *sub1(dst); }
+    inline const Data &back() const { assert(!empty()); return *sub1((iterator)dst); }
+};
 
 #endif // SEQUENCELOOP_H
