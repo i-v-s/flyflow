@@ -1,6 +1,7 @@
 #ifndef SEQUENCELOOP_H
 #define SEQUENCELOOP_H
 #include <assert.h>
+#include <type_traits>
 
 /***************************************
 
@@ -13,7 +14,7 @@ template<typename Data, int SIZE = 64>
 class SequenceLoop
 {
 private:
-    struct Place { char buf[sizeof(Data)]; };
+    typedef typename std::aligned_storage<sizeof(Data), alignof(Data)>::type Place;
     Place data[SIZE];
     Place * volatile src, * volatile dst;
     template<typename Time> Data * findBeforeIn(Time time, Data *b, Data *e)
