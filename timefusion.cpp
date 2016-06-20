@@ -26,14 +26,15 @@ public:
         //constexpr int n() {return N;}
         State() : data({nullptr, 0.0, -1, -1, -1}) { }
     } state;
-    template<class AnyState>
-    void from(const AnyState &prev, double dt) // Обновиться, опираясь на предыдущее состояние, бывшее dt секунд назад
+    template<class AnyPoint>
+    void from(const AnyPoint &prev, double dt) // Обновиться, опираясь на предыдущее состояние, бывшее dt секунд назад
     {
+        TestData &td = prev->state.data;
         state.data.m = measure.x;
         state.data.n = N;
-        state.data.prev = &prev.data;
+        state.data.prev = &td;
         state.data.dt = dt;
-        state.data.g = prev.data.g + 1;
+        state.data.g = td.g + 1;
     }
     void from() // Обновиться, опираясь только на измерение
     {
@@ -85,12 +86,12 @@ public:
         sprintf(b, "%c%d", A, measure.x);
         state.data = b;
     }
-    template<class AnyState>
-    void from(const AnyState &prev, int dt) // Обновиться, опираясь на предыдущее состояние, бывшее dt секунд назад
+    template<class AnyPoint>
+    void from(const AnyPoint &prev, int dt) // Обновиться, опираясь на предыдущее состояние, бывшее dt секунд назад
     {
         char b[20];
         sprintf(b, "(%d)%c%d", dt, A, measure.x);
-        state.data = prev.data + b;
+        state.data = prev->state.data + b;
     }
 };
 

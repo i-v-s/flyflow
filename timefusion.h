@@ -25,12 +25,12 @@ protected:
     template<class Iterator1, class Iterator2>
     void addMeasureIt(const Iterator1 &i, const Iterator2 &bestIt)
     {
-        i->from(bestIt->state, i->time() - bestIt->time());
+        i->from(bestIt, i->time() - bestIt->time());
     }
 
     template<class It1, class It2> void calc(It1 i, It2 o)
     {
-        o->from(i->state, o->time() - i->time());
+        o->from(i, o->time() - i->time());
     }
     template<class It1> inline void calc(const It1 &, std::nullptr_t) {}
     template<class It2> inline void calc(std::nullptr_t, const It2 &) { assert(!"Unable to calc"); }
