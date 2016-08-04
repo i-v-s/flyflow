@@ -24,22 +24,32 @@ public:
         //inline const
 };
 
-template<class Time, class Data>
-struct Stamped : public Data
+template<class Time>
+class Stamped
+{
+    const Time time_;
+public:
+    inline Time time() const { return time_; }
+    Stamped(Time time) : time_(time) { }
+};
+
+/*template<class Time, class Data>
+class Stamped : public Data
 {
     Time time_;
 public:
     inline Time time() const { return time_;}
     template<class T>
     Stamped(Time time, const T &data) : Data(data), time_(time) {}
-};
+};*/
 
-template<class Time, class Data>
-class SequenceDeque : public std::deque<Stamped<Time, Data>>
+template<class Data>
+class SequenceDeque : public std::deque<Data>
 {
 public:
-    typedef std::deque<Stamped<Time, Data>> Deque;
+    typedef std::deque<Data> Deque;
     typedef typename Deque::iterator iterator;
+    template<class Time>
     iterator findBefore(Time time)
     {
         iterator r = Deque::end();
@@ -54,11 +64,11 @@ public:
     {
         return Deque::begin();
     }*/
-    template<class T>
-    inline void add(Time time, const T &data)
+    template<typename... _Args>
+    inline void add(_Args&&... __args)
     {
-        assert(Deque::empty() || Deque::back().time() < time);
-        Deque::emplace_back(time, data);
+        Deque::emplace_back(__args...);
+        assert(Deque::size() <= 1 || Deque::back().time() > Deque::at(Deque::size() - 2).time());
     }
     static inline iterator sub1(const iterator &i) { return i - 1; }
     static inline void inc(iterator &i) { i++; }

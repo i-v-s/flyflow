@@ -10,8 +10,8 @@ struct TestData
     int n, m, g;
 };
 
-template<int N>
-class TestPoint
+template<typename Time, int N>
+class TestPoint : public Stamped<Time>
 {
 public:
     struct Measure
@@ -26,17 +26,19 @@ public:
         //constexpr int n() {return N;}
         State() : data({nullptr, 0.0, -1, -1, -1}) { }
     } state;
-    template<class AnyPoint>
-    void from(const AnyPoint &prev, double dt) // Обновиться, опираясь на предыдущее состояние, бывшее dt секунд назад
+    template<class AnyPair, class AnyOwner>
+    void from(const AnyPair &prev, AnyOwner *) // Обновиться, опираясь на предыдущее состояние, бывшее dt секунд назад
     {
-        TestData &td = prev->state.data;
+        double dt = 0;//time() - prev.time();
+        TestData &td = prev.first->state.data;
         state.data.m = measure.x;
         state.data.n = N;
         state.data.prev = &td;
         state.data.dt = dt;
         state.data.g = td.g + 1;
     }
-    void from() // Обновиться, опираясь только на измерение
+    template<class AnyOwner>
+    void from(const AnyOwner *) // Обновиться, опираясь только на измерение
     {
         state.data.prev = nullptr;
         state.data.n = N;
@@ -44,28 +46,28 @@ public:
         state.data.dt = 0.0;
         state.data.g = 0;
     }
-    TestPoint(const Measure &measure) : measure(measure) {}
+    TestPoint(Time time, const Measure &measure) : Stamped<Time>(time), measure(measure) {}
 };
 
 TEST(FusionTest, single)
 {
-    TestPoint<1>::State s;
+    TestPoint<double, 1>::State s;
     double t = -1;
-    TimeFusion<double, SequenceDeque<double, TestPoint<1>>> tf;
+    TimeFusion<double, SequenceDeque<TestPoint<double, 1>>> tf;
     EXPECT_FALSE(tf.get(&s, &t));
-    tf.onMeasure(0.0, TestPoint<1>::Measure('a'));
+    tf.onMeasure(0.0, TestPoint<double, 1>::Measure('a'));
     EXPECT_TRUE(tf.get(&s, &t));
     //EXPECT_DOUBLE_EQ(s.x, 0.0);
     EXPECT_DOUBLE_EQ(t, 0.0);
 
-    tf.onMeasure(1.0, TestPoint<1>::Measure('b'));
+    tf.onMeasure(1.0, TestPoint<double, 1>::Measure('b'));
     EXPECT_TRUE(tf.get(&s, &t));
     //EXPECT_DOUBLE_EQ(s.x, 0.75);
     EXPECT_DOUBLE_EQ(t, 1.0);
 }
 
-template<char A>
-class TextPoint
+template<typename Time, char A>
+class TextPoint : public Stamped<Time>
 {
 public:
     struct Measure
@@ -79,59 +81,61 @@ public:
         std::string data;
         State() : data("?") { }
     } state;
-    TextPoint(const Measure &measure) : measure(measure) {}
-    void from()
+    TextPoint(Time time, const Measure &measure) : Stamped<Time>(time), measure(measure) {}
+    template<class T>
+    void from(T *)
     {
         char b[20];
         sprintf(b, "%c%d", A, measure.x);
         state.data = b;
     }
-    template<class AnyPoint>
-    void from(const AnyPoint &prev, int dt) // Обновиться, опираясь на предыдущее состояние, бывшее dt секунд назад
+    template<class AnyPoint, class Owner>
+    void from(const AnyPoint &prev, Owner *) // Обновиться, опираясь на предыдущее состояние, бывшее dt секунд назад
     {
+        int dt = Stamped<Time>::time() - prev.first->time();
         char b[20];
         sprintf(b, "(%d)%c%d", dt, A, measure.x);
-        state.data = prev->state.data + b;
+        state.data = prev.first->state.data + b;
     }
 };
 
-template<typename Time, class Point>
-class Sequence : public SequenceLoop<Stamped<Time, Point>> {};
+template<class Point>
+class Sequence : public SequenceLoop<Point> {};
 
 TEST(FusionTest, three)
 {
-    TextPoint<'A'>::State a;
-    TextPoint<'B'>::State b;
-    TextPoint<'C'>::State c;
-    int t;
     typedef int Time;
-    typedef Sequence<Time, TextPoint<'A'>> SeqA;
-    typedef Sequence<Time, TextPoint<'B'>> SeqB;
-    typedef Sequence<Time, TextPoint<'C'>> SeqC;
+    TextPoint<Time, 'A'>::State a;
+    TextPoint<Time, 'B'>::State b;
+    TextPoint<Time, 'C'>::State c;
+    int t;
+    typedef Sequence<TextPoint<Time, 'A'>> SeqA;
+    typedef Sequence<TextPoint<Time, 'B'>> SeqB;
+    typedef Sequence<TextPoint<Time, 'C'>> SeqC;
     TimeFusion<Time, SeqA, SeqB, SeqC> tf;
                                                  // 0  1  2  3  4  5
-    tf.onMeasure(1, TextPoint<'A'>::Measure(1)); //   >A1
+    tf.onMeasure(1, TextPoint<Time, 'A'>::Measure(1)); //   >A1
     EXPECT_TRUE(tf.get(&a, &t));
     EXPECT_EQ(a.data, "A1");
-    tf.onMeasure(4, TextPoint<'B'>::Measure(2)); //    A1      >B2
+    tf.onMeasure(4, TextPoint<Time, 'B'>::Measure(2)); //    A1      >B2
     EXPECT_TRUE(tf.get(&b, &t));
     EXPECT_EQ(b.data, "A1(3)B2");
-    tf.onMeasure(0, TextPoint<'C'>::Measure(3)); //>C3 A1       B2
+    tf.onMeasure(0, TextPoint<Time, 'C'>::Measure(3)); //>C3 A1       B2
     EXPECT_TRUE(tf.get(&c, &t));
     EXPECT_EQ(c.data, "C3");
     EXPECT_TRUE(tf.get(&b, &t));
     EXPECT_EQ(b.data, "C3(1)A1(3)B2");
-    tf.onMeasure(2, TextPoint<'A'>::Measure(4)); // C3 A1>A4    B2
+    tf.onMeasure(2, TextPoint<Time, 'A'>::Measure(4)); // C3 A1>A4    B2
     EXPECT_TRUE(tf.get(&a, &t));
     EXPECT_EQ(a.data, "C3(1)A1(1)A4");
     EXPECT_TRUE(tf.get(&b, &t));
     EXPECT_EQ(b.data, "C3(1)A1(1)A4(2)B2");
-    tf.onMeasure(3, TextPoint<'C'>::Measure(5)); // C3 A1 A4>C5 B2
+    tf.onMeasure(3, TextPoint<Time, 'C'>::Measure(5)); // C3 A1 A4>C5 B2
     EXPECT_TRUE(tf.get(&c, &t));
     EXPECT_EQ(c.data, "C3(1)A1(1)A4(1)C5");
     EXPECT_TRUE(tf.get(&b, &t));
     EXPECT_EQ(b.data, "C3(1)A1(1)A4(1)C5(1)B2");
-    tf.onMeasure(5, TextPoint<'C'>::Measure(6)); // C3 A1 A4 C5 B2>C6
+    tf.onMeasure(5, TextPoint<Time, 'C'>::Measure(6)); // C3 A1 A4 C5 B2>C6
     EXPECT_TRUE(tf.get(&c, &t));
     EXPECT_EQ(c.data, "C3(1)A1(1)A4(1)C5(1)B2(1)C6");
 }

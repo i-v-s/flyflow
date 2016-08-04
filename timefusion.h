@@ -1,5 +1,6 @@
 #ifndef TIMEFUSION_H
 #define TIMEFUSION_H
+#include <utility>
 #include <cstddef>
 #include <assert.h>
 
@@ -17,20 +18,20 @@ protected:
         assert(!"Unknown Measure type");
     }
     constexpr bool initCalculate(Time, Time) { return false; }
-    template<class It1> void addMeasureIt(const It1 &i)
+    template<class Pair1> void addMeasureIt(const Pair1 &i)
     { // Не нашли предыдущего состояния
-        i->from();
+        i.first->from(i.second);
     }
 
-    template<class Iterator1, class Iterator2>
-    void addMeasureIt(const Iterator1 &i, const Iterator2 &bestIt)
+    template<class Pair1, class Pair2>
+    void addMeasureIt(const Pair1 &i, const Pair2 &bestIt)
     {
-        i->from(bestIt, i->time() - bestIt->time());
+        i.first->from(bestIt, i.second);
     }
 
-    template<class It1, class It2> void calc(It1 i, It2 o)
+    template<class Pair1, class Pair2> void calc(Pair1 i, Pair2 o)
     {
-        o->from(i, o->time() - i->time());
+        o.first->from(i, o.second);
     }
     template<class It1> inline void calc(const It1 &, std::nullptr_t) {}
     template<class It2> inline void calc(std::nullptr_t, const It2 &) { assert(!"Unable to calc"); }
@@ -48,10 +49,10 @@ private:
     Iterator point;
 protected:
 // addMeasure[It] - добавить измерение, инициализировать point
-    template<class Iterator1, class Iterator2>
-    void addMeasureIt(const Iterator1 &i, const Iterator2 &bestIt)
+    template<class Pair1, class Pair2>
+    void addMeasureIt(const Pair1 &i, const Pair2 &bestIt)
     {
-        point = points.findBefore(i->time());
+        point = points.findBefore(i.first->time());
         if(point == points.end())
         {
             Parent::addMeasureIt(i, bestIt);
@@ -59,22 +60,22 @@ protected:
         }
         else
         {
-            if(bestIt->time() > point->time())
+            if(bestIt.first->time() > point->time())
                 Parent::addMeasureIt(i, bestIt);
             else
-                Parent::addMeasureIt(i, point);
+                Parent::addMeasureIt(i, std::make_pair(point, &points));
             points.inc(point);
         }
     }
-    template<class Iterator1>
-    void addMeasureIt(const Iterator1 &i)
+    template<class Pair1>
+    void addMeasureIt(const Pair1 &i)
     {
-        point = points.findBefore(i->time());
+        point = points.findBefore(i.first->time());
         if(point == points.end())
             Parent::addMeasureIt(i);
         else
         {
-            Parent::addMeasureIt(i, point);
+            Parent::addMeasureIt(i, std::make_pair(point, &points));
             points.inc(point);
         }
     }
@@ -83,7 +84,7 @@ protected:
     {
         points.add(time, measure);
         point = points.end();
-        Parent::addMeasureIt(points.sub1(point), bestIt);
+        Parent::addMeasureIt(std::make_pair(points.sub1(point), &points), bestIt);
     }
     void addMeasure(Time time, const typename Point::Measure &measure) // Добавляем измерение, тип которого совпадает с верхним
     {
@@ -91,14 +92,14 @@ protected:
         {
             points.add(time, measure);
             point = points.end();
-            Parent::addMeasureIt(points.sub1(point));
+            Parent::addMeasureIt(std::make_pair(points.sub1(point), &points));
         }
         else
         {
             points.add(time, measure);
             point = points.end();
             Iterator last = points.sub1(point);
-            Parent::addMeasureIt(last, points.sub1(last));
+            Parent::addMeasureIt(std::make_pair(last, &points), std::make_pair(points.sub1(last), &points));
         }
     }
     template<class Measure>
@@ -112,12 +113,12 @@ protected:
         }
         else
         {
-            Parent::addMeasure(time, measure, point);
+            Parent::addMeasure(time, measure, std::make_pair(point, &points));
             points.inc(point);
         }
     }
-    template<class Measure, class AnyIterator>
-    void addMeasure(Time time, const Measure &measure, const AnyIterator &bestIt) // Добавляем измерение, тип которого не совпадает с верхним
+    template<class Measure, class Pair>
+    void addMeasure(Time time, const Measure &measure, const Pair &bestIt) // Добавляем измерение, тип которого не совпадает с верхним
     {
         point = points.findBefore(time);
         if(point == points.end())
@@ -127,10 +128,10 @@ protected:
         }
         else
         {
-            if(bestIt->time() > point->time())
+            if(bestIt.first->time() > point->time())
                 Parent::addMeasure(time, measure, bestIt);
             else
-                Parent::addMeasure(time, measure, point);
+                Parent::addMeasure(time, measure, std::make_pair(point, &points));
             points.inc(point);
         }
     }
@@ -140,44 +141,44 @@ protected:
     template<class T> inline bool laterThanKnown(T i)
     {
         if(point == points.begin()) return true;
-        return i->time() > points.sub1(point)->time();
+        return i.first->time() > points.sub1(point)->time();
     }
     ////////////// можно ли считать point?
     inline bool pointOk(std::nullptr_t) { return point != points.end(); }
     template<class T> inline bool pointOk(T o)
     {
         if(point == points.end()) return false;
-        return point->time() < o->time();
+        return point->time() < o.first->time();
     }
     // Расчитать из состояния i состояние o
-    template<class It1, class It2>
-    void calc(It1 i, It2 o)
+    template<class Pair1, class Pair2>
+    void calc(const Pair1 &i, const Pair2 &o)
     {
         if(points.empty()) { Parent::calc(i, o); return; }
 
         if(pointOk(o))
         {
             if(laterThanKnown(i))
-                Parent::calc(i, point);
+                Parent::calc(i, std::make_pair(point, &points));
             else
-                Parent::calc(points.sub1(point), point);
+                Parent::calc(std::make_pair(points.sub1(point), &points), std::make_pair(point, &points));
         }
         else
         {
             if(laterThanKnown(i))
                 Parent::calc(i, o);
             else
-                Parent::calc(points.sub1(point), o);
+                Parent::calc(std::make_pair(points.sub1(point), &points), o);
             return;
         }
         Iterator prev = point;
         for(points.inc(point); pointOk(o); points.inc(point))
         {
-            Parent::calc(prev, point);
+            Parent::calc(std::make_pair(prev, &points), std::make_pair(point, &points));
             prev = point;
         }
 
-        Parent::calc(prev, o);
+        Parent::calc(std::make_pair(prev, &points), o);
     }
 public:
     template<class Measure>
