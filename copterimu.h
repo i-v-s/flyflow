@@ -86,8 +86,8 @@ public:
 }
 */
 
-template<typename Time = double, typename Scalar = double>
-class ImuSequence : public SequenceLoop<ImuPoint<Time, Scalar>, 64>
+template<typename Time = double, typename Scalar = double, int N = 64>
+class ImuSequence : public SequenceLoop<ImuPoint<Time, Scalar>, N>
 {
     typedef Eigen::Quaternion<Scalar> Quaternion;
     typedef Eigen::Matrix<Scalar, 3, 1> Vector3;
