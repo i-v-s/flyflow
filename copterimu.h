@@ -69,7 +69,9 @@ public:
     template<class Owner>
     void from(const Owner *)
     {
-
+        state.q.setIdentity();
+        state.p.setZero();
+        state.v.setZero();
     }
 };
 
@@ -95,10 +97,16 @@ class ImuSequence : public SequenceLoop<ImuPoint<Time, Scalar>, N>
     typedef Eigen::Matrix<Scalar, 4, 4> Matrix4;
     Vector3 wBias_, aBias_, gravity_;
 public:
+    inline void setWBias(const Vector3 &wb) { wBias_ = wb; }
+    inline void setGravity(Scalar gravity) { gravity_ << 0, 0, gravity; }
     inline const Vector3 &wBias() const { return wBias_; }
     inline const Vector3 &aBias() const { return aBias_; }
     inline const Vector3 &gravity() const { return gravity_; }
     //void predict(T time);
-
+    ImuSequence()
+    {
+        aBias_.setZero();
+        wBias_.setZero();
+    }
 
 };
