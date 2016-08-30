@@ -62,7 +62,7 @@ ImuTestResult testImuFromFile(const std::string &fn, Time t1b, Time t1e, Time t2
 
     while(std::getline(file, line))
     {
-        if(p > 0) for(int x = 0, xo = 0, i = 0; x < line.size(); x++) if(line[x] == ',')
+        if(p > 0) for(size_t x = 0, xo = 0, i = 0; x < line.size(); x++) if(line[x] == ',')
         {
             int v = std::stoi(line.substr(xo, x - xo));
             switch(i)
@@ -153,4 +153,37 @@ TEST(CopterImuTest, mpu9250)
     //qq.setFromTwoVectors(a2, v0);
 
     std::cout << "l1 << l2";
+}
+
+TEST(CopterImuTest, fromGravityAndMag)
+{
+    typedef double Time;
+    typedef double Scalar;
+    typedef ImuPoint<Time, Scalar> Point;
+    Eigen::Vector3d grav, mag;
+    Point::Measure m;
+
+    /*Point p(0.0, m);
+    grav << 0.0, 0.0, 1.0;
+    mag << 1.0, 0.0, 0.0;
+    p.fromGravityAndMag(grav, mag);*/
+
+    m.w.setZero();
+    grav << 1, -2, 9;
+    mag << 5, 7, 1;
+    m.a = grav;
+    Point p1(0.0, m), p2(1.0, m);
+    ImuSequence<Time, Scalar> seq;
+    seq.setGravity(grav.norm());
+    p1.state.p.setZero();
+    p1.state.v.setZero();
+    p1.fromGravityAndMag(grav, mag);
+    p2.from(std::make_pair(&p1, &seq), &seq);
+
+    EXPECT_EQ(p1.state.q.x(), p2.state.q.x());
+    EXPECT_EQ(p1.state.q.y(), p2.state.q.y());
+    EXPECT_EQ(p1.state.q.z(), p2.state.q.z());
+    EXPECT_EQ(p1.state.q.w(), p2.state.q.w());
+
+    EXPECT_NEAR(p2.state.v.norm(), 0, 1E-14);
 }

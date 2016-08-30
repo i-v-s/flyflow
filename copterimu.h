@@ -73,6 +73,14 @@ public:
         state.p.setZero();
         state.v.setZero();
     }
+    void fromGravityAndMag(const Vector3 &gravity, const Vector3 &mag)
+    {
+        Matrix3 mat;
+        mat.template block<3, 1>(0, 2) = gravity.normalized();
+        mat.template block<3, 1>(0, 1) = mat.template block<3, 1>(0, 2).cross(mag).normalized();
+        mat.template block<3, 1>(0, 0) = mat.template block<3, 1>(0, 1).cross(mat.template block<3, 1>(0, 2));
+        state.q = Quaternion(mat.transpose());
+    }
 };
 
 
