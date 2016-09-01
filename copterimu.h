@@ -77,9 +77,10 @@ public:
     {
         Matrix3 mat;
         mat.template block<3, 1>(0, 2) = gravity.normalized();
-        mat.template block<3, 1>(0, 1) = mat.template block<3, 1>(0, 2).cross(mag).normalized();
-        mat.template block<3, 1>(0, 0) = mat.template block<3, 1>(0, 1).cross(mat.template block<3, 1>(0, 2));
-        state.q = Quaternion(mat.transpose());
+        mat.template block<3, 1>(0, 1) = -mag.cross(mat.template block<3, 1>(0, 2)).normalized();
+        mat.template block<3, 1>(0, 0) = -mat.template block<3, 1>(0, 2).cross(mat.template block<3, 1>(0, 1));
+        state.q = Quaternion(mat.transpose()).normalized();
+        //Matrix3 m1 = state.q.toRotationMatrix();
     }
 };
 
