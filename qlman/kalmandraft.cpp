@@ -13,6 +13,10 @@ KalmanDraft::KalmanDraft(QObject *parent) : QObject(parent),
     fts[1] << 80, 20;
     fts[2] << 60, 50;
     fts[3] << 50, 100;
+    fts[4] << -40, -100;
+    fts[5] << -90, 20;
+    fts[6] << 100, -50;
+    fts[7] << -100, -100;
 }
 
 void KalmanDraft::step(double dt)
@@ -23,7 +27,7 @@ void KalmanDraft::step(double dt)
     k.X_(0) += acc(0) * dt;
     k.X_(1) += acc(1) * dt;
     int n = sizeof(fts) / sizeof(*fts);
-    Eigen::Matrix<double, 4, 1> z;
+    Eigen::Matrix<double, 8, 1> z;
     for(int x = 0; x < n; x++)
     {
         Eigen::Vector2d fp = fts[x] - pos;
@@ -41,8 +45,8 @@ void KalmanDraft::step(double dt)
         QVariant rx(fts[N](0)), ry(fts[N](1));
         emit onFeature(QVariant(N), x, y, a, radx, rady, rx, ry);
     }
-    QVariant tx(pos(0)), ty(pos(1)), ta(a);
-    emit onPos(tx, ty, ta);
+    QVariant tx(pos(0)), ty(pos(1)), ra(a), xa(k.X_(2)), da(sqrt(k.Sigma_(2, 2)));
+    emit onPos(tx, ty, ra, xa, da);
 }
 
 void KalmanDraft::setAccel(double ax, double ay)

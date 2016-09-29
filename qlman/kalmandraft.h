@@ -21,14 +21,17 @@ public:
 
         this->Q_(0, 0) = 0.1; // Шум скорости
         this->Q_(1, 1) = 0.1; //
+
+        this->Q_(3, 3) = 0.1; // Шум скорости вращения
+        this->Q_(2, 2) = 0.8; // Шум угла поворота
         for(int x = 0; x < FC; x++) // Движение фич
         {
             this->G_(4 + x * 2, 0) = -dt;
             this->G_(5 + x * 2, 1) = -dt;
             this->X_(4 + x * 2) = ((double)rand() / RAND_MAX) * 200.0 - 100.0;
             this->X_(5 + x * 2) = ((double)rand() / RAND_MAX) * 200.0 - 100.0;
-            this->Sigma_(4 + x * 2, 4 + x * 2) = 10000; // Неизвестно, где они
-            this->Sigma_(5 + x * 2, 5 + x * 2) = 10000;
+            this->Sigma_(4 + x * 2, 4 + x * 2) = 1E6; // Неизвестно, где они
+            this->Sigma_(5 + x * 2, 5 + x * 2) = 1E6;
             this->R_(x, x) = 0.01; // Шум измерения
             //int t = 4 + x * 2;
             //this->Q_(t, t) = 0.05; // Шум фич
@@ -52,15 +55,15 @@ public:
 class KalmanDraft : public QObject
 {
     Q_OBJECT
-    KalmanFeatures2D<4> k; // x1, y1, a
+    KalmanFeatures2D<8> k; // x1, y1, a
     Eigen::Vector2d pos, vel, acc; // Реальные позиция, скорость, ускорение
     double a;
-    Eigen::Vector2d fts[4];
+    Eigen::Vector2d fts[8];
 public:
     explicit KalmanDraft(QObject *parent = 0);
 signals:
     void onFeature(QVariant num, QVariant x, QVariant y, QVariant a, QVariant radx, QVariant rady, QVariant rx, QVariant ry);
-    void onPos(QVariant x, QVariant y, QVariant a);
+    void onPos(QVariant x, QVariant y, QVariant ra, QVariant a, QVariant da);
 public slots:
     void step(double dt);
     void setAccel(double ax, double ay);

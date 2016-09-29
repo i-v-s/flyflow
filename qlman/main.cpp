@@ -13,6 +13,6 @@ int main(int argc, char *argv[])
     QObject::connect(qml, SIGNAL(doStep(double)),           &kd, SLOT(step(double)));
     QObject::connect(qml, SIGNAL(setAccel(double, double)), &kd, SLOT(setAccel(double,double)));
     QObject::connect(&kd, SIGNAL(onFeature(QVariant, QVariant, QVariant, QVariant, QVariant, QVariant, QVariant, QVariant)), qml, SLOT(onFeature(QVariant, QVariant, QVariant, QVariant, QVariant, QVariant, QVariant, QVariant)));
-    QObject::connect(&kd, SIGNAL(onPos(QVariant, QVariant, QVariant)), qml, SLOT(onPos(QVariant, QVariant, QVariant)));
+    QObject::connect(&kd, SIGNAL(onPos(QVariant, QVariant, QVariant, QVariant, QVariant)), qml, SLOT(onPos(QVariant, QVariant, QVariant, QVariant, QVariant)));
     return app.exec();
 }
