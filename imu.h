@@ -3,6 +3,29 @@
 #include <Eigen/Core>
 #include <Eigen/Geometry>
 
+namespace Imu {
+
+/// Вектор состояния инерциальной навигационной платформы
+template<typename Scalar>
+struct VectorX : public Eigen::Matrix<Scalar, 10, 1>
+{
+    enum Offset
+    {
+        attitudeOffset = 0,
+        velocityOffset = 4,
+        positionOffset = 7
+    };
+
+    auto v() { return this->template block<3, 1>(velocityOffset, 0); }
+    auto p() { return this->template block<3, 1>(positionOffset, 0); }
+
+    Eigen::Map<Eigen::Quaternion<Scalar>> q()
+    {
+        return this->template block<0, 4>(attitudeOffset, 0);
+    }
+};
+
+}
 
 template<typename Time, typename Scalar>
 class ImuPoint
@@ -23,7 +46,9 @@ public:
         Quaternion q;
         Vector3 v;
         Vector3 p;
-    } state;
+    };
+    //typedef Imu::VectorX<Scalar> State;
+    State state;
     ImuPoint(Time t, const Measure &m) : time_(t), measure(m) {}
     template<class Derived>
     static inline Eigen::Matrix<typename Derived::Scalar, 4, 4> omegaMatJPL( const Eigen::MatrixBase<Derived> & vec ) {
