@@ -78,10 +78,11 @@ TEST(vtpVectorTest, vectorUnion)
 TEST(vtpMatrixTest, basic)
 {
     using namespace vtp;
-    Matrix<
+    typedef Matrix<
             Tag<Velocity, Vector<Tag<Velocity, double>, Tag<Position, double>>>,
             Tag<Position, Vector<Tag<Velocity, double>>>
-            > mat;
+            > Mat;
+    Mat mat;
     get<Velocity, Position>(mat) = 2.0;
     get<Position, Velocity>(mat) = 4.0;
     const auto &cmat = mat;
@@ -90,15 +91,17 @@ TEST(vtpMatrixTest, basic)
     EXPECT_EQ(pv, 4.0);
     EXPECT_EQ(vp, 2.0);
 
-    Matrix<
+    typedef Matrix<
             Tag<Velocity, Vector<Tag<Velocity, double>, Tag<Position, double>>>,
             Tag<Position, Vector<Tag<Velocity, double>, Tag<Position, double>>>
-            > mat2;
+            > Mat2;
+    Mat2 mat2;
     get<Velocity, Position>(mat2) = 20.0;
     get<Position, Velocity>(mat2) = 40.0;
     get<Position, Position>(mat2) = 70.0;
     auto mat3 = cmat + mat2;
-
+    auto &matp = get<Position>((const typename Mat::Parent &) mat);
+    auto &mat2p = get<Position>((const typename Mat2::Parent &) mat2);
     pv = get<Position, Velocity>(mat3);
     vp = get<Velocity, Position>(mat3);
     auto pp = get<Position, Position>(mat2);

@@ -165,6 +165,12 @@ public:
         return *this;
     }
     template<class Other>
+    Vector<Item, Others...> & operator = (const Other & other)
+    {
+
+
+    }
+    template<class Other>
     inline typename VectorUnion<This, Other>::Result operator + (const Other & other) const
     {
         typename VectorUnion<This, Other>::Result result;
@@ -197,7 +203,7 @@ public:
     inline typename MatrixUnion<This, Other>::Result operator + (const Other & other) const
     {
         typename MatrixUnion<This, Other>::Result result;
-        result.sum((const Parent &)*this, (const Parent &)other);
+        result.sum((const Parent &)*this, (const typename Other::Parent &)other);
         return result;
     }
     template<class Other>
