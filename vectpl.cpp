@@ -72,10 +72,22 @@ TEST(vtpMatrixTest, basic)
     Matrix<
             Tag<Velocity, Vector<Tag<Velocity, double>, Tag<Position, double>>>,
             Tag<Position, Vector<Tag<Velocity, double>, Tag<Position, double>>>
-            > mat1;
+            > mat;
+    get<Velocity, Position>(mat) = 2.0;
+    get<Position, Velocity>(mat) = 4.0;
+    const auto &cmat = mat;
+    auto pv = get<Position, Velocity>(cmat);
+    auto vp = get<Velocity, Position>(cmat);
+    EXPECT_EQ(pv, 4.0);
+    EXPECT_EQ(vp, 2.0);
+}
+
+TEST(vtpMatrix, mul)
+{
+    using namespace vtp;
     Matrix<
             Tag<Velocity, Vector<Tag<Velocity, double>, Tag<Position, double>>>,
             Tag<Position, Vector<Tag<Velocity, double>, Tag<Position, double>>>
             > mat2;
-    auto mat3 = mat1 * mat2;
+    auto mat3 = mat2 * mat2;
 }

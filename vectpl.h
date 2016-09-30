@@ -100,7 +100,7 @@ template<Enum tag, class... Types> inline
 constexpr typename FindItem<tag, Vector<Types...>>::Item & get(Vector<Types...> & vector)
 {
     typedef typename FindItem<tag, Vector<Types...>>::Vector Vector;
-    return (((Vector&) vector).item.item);
+    return (((Vector&) vector).getItem());
 }
 
 /// Функция получения постоянного значения
@@ -177,12 +177,32 @@ template<typename... Vectors>
 class Matrix : public Vector<Vectors...>
 {
 public:
+    typedef Vector<Vectors...> Parent;
     template<class Other>
     Matrix<Vectors...> operator * (const Other & other) const
     {
+        Matrix<Vectors...> result;
 
+        return result;
     }
 };
+
+/// Функция получения значения из матрицы
+
+template<Enum tag1, Enum tag2, class... Vectors> inline
+constexpr auto & get(Matrix<Vectors...> & matrix)
+{
+    auto &vector = get<tag1>((typename Matrix<Vectors...>::Parent &)matrix);
+    return get<tag2>(vector);
+}
+
+template<Enum tag1, Enum tag2, class... Vectors> inline
+constexpr const auto & get(const Matrix<Vectors...> & matrix)
+{
+    const auto &vector = get<tag1>((const typename Matrix<Vectors...>::Parent &)matrix);
+    return get<tag2>(vector);
+}
+
 
 }
 
