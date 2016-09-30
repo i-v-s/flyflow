@@ -68,7 +68,7 @@ template<Enum tag, class ItemT, class... Others>
 struct FindItem<tag, Vector<ItemT, Others...>> :
         public FindItemBool<tag == ItemT::tag, tag, Vector<ItemT, Others...>> { };
 
-/// Класс, представяющий собой объединение двух векторов
+/// Класс, выполняющий объединение двух векторов
 template<class Vector1, class Vector2>
 struct VectorUnion;
 
@@ -173,11 +173,33 @@ public:
     }
 };
 
+template<typename... Vectors> class Matrix;
+template<typename... Vectors> class MatrixDef;
+
+template<typename... Vectors> struct MatrixDef<Vector<Vectors...>>
+{
+    typedef Matrix<Vectors...> Result;
+};
+
+/// Класс, выполняющий объединение двух матриц
+template<class Matrix1, class Matrix2> struct MatrixUnion
+{
+    typedef typename MatrixDef<typename VectorUnion<typename Matrix1::Parent, typename Matrix2::Parent>::Result>::Result Result;
+};
+
 template<typename... Vectors>
 class Matrix : public Vector<Vectors...>
 {
 public:
     typedef Vector<Vectors...> Parent;
+    typedef Matrix<Vectors...> This;
+    template<class Other>
+    inline typename MatrixUnion<This, Other>::Result operator + (const Other & other) const
+    {
+        typename MatrixUnion<This, Other>::Result result;
+        result.sum((const Parent &)*this, (const Parent &)other);
+        return result;
+    }
     template<class Other>
     Matrix<Vectors...> operator * (const Other & other) const
     {

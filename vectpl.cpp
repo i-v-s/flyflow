@@ -39,7 +39,7 @@ TEST(vtpVectorTest, sum)
 {
     using namespace vtp;
     typedef Vector<Tag<Velocity, double>, Tag<Height, double>> V1;
-    typedef Vector<Tag<Position, double>, Tag<Height, double>> V2;
+    typedef Vector<Tag<Height, double>, Tag<Position, double>> V2;
     //typedef typename VectorUnion<V1, V2>::Result V3;
     V1 v1;
     get<Velocity>(v1) = 1.1;
@@ -51,6 +51,15 @@ TEST(vtpVectorTest, sum)
     EXPECT_EQ(get<Velocity>(v3), 1.1);
     EXPECT_EQ(get<Position>(v3), 1.4);
     EXPECT_EQ(get<Height>(v3), 3.0);
+    Vector<Tag<Velocity, double>, Tag<Height, double>> v4;
+    get<Velocity>(v4) = 1.0;
+    get<Height>(v4) = 2.0;
+    Vector<Tag<Height, double>, Tag<Velocity, double>> v5;
+    get<Height>(v5) = 8.0;
+    get<Velocity>(v5) = 4.0;
+    auto v6 = v4 + v5;
+    EXPECT_EQ(get<Velocity>(v6), 5.0);
+    EXPECT_EQ(get<Height>(v6), 10.0);
 }
 
 TEST(vtpVectorTest, vectorUnion)
@@ -71,7 +80,7 @@ TEST(vtpMatrixTest, basic)
     using namespace vtp;
     Matrix<
             Tag<Velocity, Vector<Tag<Velocity, double>, Tag<Position, double>>>,
-            Tag<Position, Vector<Tag<Velocity, double>, Tag<Position, double>>>
+            Tag<Position, Vector<Tag<Velocity, double>>>
             > mat;
     get<Velocity, Position>(mat) = 2.0;
     get<Position, Velocity>(mat) = 4.0;
@@ -80,6 +89,22 @@ TEST(vtpMatrixTest, basic)
     auto vp = get<Velocity, Position>(cmat);
     EXPECT_EQ(pv, 4.0);
     EXPECT_EQ(vp, 2.0);
+
+    Matrix<
+            Tag<Velocity, Vector<Tag<Velocity, double>, Tag<Position, double>>>,
+            Tag<Position, Vector<Tag<Velocity, double>, Tag<Position, double>>>
+            > mat2;
+    get<Velocity, Position>(mat2) = 20.0;
+    get<Position, Velocity>(mat2) = 40.0;
+    get<Position, Position>(mat2) = 70.0;
+    auto mat3 = cmat + mat2;
+
+    pv = get<Position, Velocity>(mat3);
+    vp = get<Velocity, Position>(mat3);
+    auto pp = get<Position, Position>(mat2);
+    EXPECT_EQ(pv, 44.0);
+    EXPECT_EQ(vp, 22.0);
+    EXPECT_EQ(pp, 70.0);
 }
 
 TEST(vtpMatrix, mul)
