@@ -36,7 +36,7 @@ struct ImuTestResult
 
 typedef double Time;
 
-ImuTestResult testImuFromFile(const std::string &fn, Time t1b, Time t1e, Time t2b, Time t2e, double af, double wf)
+void testImuFromFile(const std::string &fn, Time t1b, Time t1e, Time t2b, Time t2e, double af, double wf)
 {
     std::ifstream file(fn);
     std::string line;
@@ -127,6 +127,7 @@ ImuTestResult testImuFromFile(const std::string &fn, Time t1b, Time t1e, Time t2
             c2 = 0;
         }
     }
+    if(!it) return;
     v2 = it->state.v;
     p2 = it->state.p;
     Time dt = 11.85 - 10.33;
@@ -146,7 +147,7 @@ TEST(CopterImuTest, mpu9250)
     //Time t1b = 11.85, t1e = 12.30, t2b = 13.24, t2e = 13.80;
 
     //ImuTestResult res = testImuFromFile("dump-mpu9250-1.csv", 11.85, 12.30, 13.24, 13.80, 1.0, 0.1);
-    ImuTestResult res = testImuFromFile("dump-mpu9250-x-10.csv", 27.10, 27.80, 30.60, 32.00, 1.0, 0.1);
+    testImuFromFile("dump-mpu9250-x-10.csv", 27.10, 27.80, 30.60, 32.00, 1.0, 0.1);
     //ImuTestResult res = testImuFromFile("dump-mpu9250-x10r.csv", 39.30, 39.90, 42.80, 44.40, 0.05, 0.05);
     //ImuTestResult res = testImuFromFile("dump-mpu9250-r180.csv", 82.5, 82.9, 85.3, 88.0, 1.0, 1.0);
     //Eigen::Quaterniond qq;

@@ -35,14 +35,32 @@ TEST(vtpVectorTest, basic)
     EXPECT_EQ(vtp::get<Position>(v3), 2);
 }
 
-TEST(vtpVectorTest, merge)
+TEST(vtpVectorTest, sum)
+{
+    using namespace vtp;
+    typedef Vector<Tag<Velocity, double>, Tag<Height, double>> V1;
+    typedef Vector<Tag<Position, double>, Tag<Height, double>> V2;
+    //typedef typename VectorUnion<V1, V2>::Result V3;
+    V1 v1;
+    get<Velocity>(v1) = 1.1;
+    get<Height>(v1) = 1.3;
+    V2 v2;
+    get<Position>(v2) = 1.4;
+    get<Height>(v2) = 1.7;
+    auto v3 = v1 + v2;
+    EXPECT_EQ(get<Velocity>(v3), 1.1);
+    EXPECT_EQ(get<Position>(v3), 1.4);
+    EXPECT_EQ(get<Height>(v3), 3.0);
+}
+
+TEST(vtpVectorTest, vectorUnion)
 {
     using namespace vtp;
     typedef Vector<vtp::Tag<Velocity, double>> V1;
     static_assert(V1::template subsetOf<V1>(), "subset error");
     typedef Vector<vtp::Tag<Attitude, std::string>> V2;
     static_assert(!V1::template subsetOf<V2>(), "subset error");
-    typedef VectorMerge<V1, V2> V3;
+    typedef VectorUnion<V1, V2> V3;
     static_assert(V1::template subsetOf<V3>(), "subset error");
     static_assert(V2::template subsetOf<V3>(), "subset error");
     static_assert(!V3::template subsetOf<V1>(), "subset error");
@@ -51,14 +69,6 @@ TEST(vtpVectorTest, merge)
 TEST(vtpMatrixTest, basic)
 {
     using namespace vtp;
-    typedef Vector<Tag<Velocity, double>> V1;
-    typedef Vector<Tag<Position, double>> V2;
-    typedef VectorMerge<V1, V2> V3;
-    V1 v1;
-    V2 v2;
-    V3 v3 = v1 + v2;
-
-
     Matrix<
             Tag<Velocity, Vector<Tag<Velocity, double>, Tag<Position, double>>>,
             Tag<Position, Vector<Tag<Velocity, double>, Tag<Position, double>>>

@@ -24,9 +24,10 @@ class Vector;
 /// Специализация пустого вектора
 template<> class Vector<>
 {
+protected:
+    template<class Other> inline void add(const Other &) { }
+    template<class Other1, class Other2> inline void sum(const Other1 &, const Other2 &) { }
 public:
-    template<class O>
-    constexpr inline Vector<> & operator += (const O &) { return *this; }
     //constexpr bool has(Enum) const { return false; }
     template<Enum tag> static constexpr bool has() { return false; }
     template<class Other> static constexpr bool subsetOf() { return true; }
@@ -67,39 +68,31 @@ template<Enum tag, class ItemT, class... Others>
 struct FindItem<tag, Vector<ItemT, Others...>> :
         public FindItemBool<tag == ItemT::tag, tag, Vector<ItemT, Others...>> { };
 
-/// Функция получения постоянного значения
-template<Enum tag, class... Types> inline
-constexpr const typename FindItem<tag, Vector<Types...>>::Item & get(const Vector<Types...> & vector)
-{
-    typedef typename FindItem<tag, Vector<Types...>>::Vector Vector;
-    return (((Vector&) vector).getItem());
-}
-
 /// Класс, представяющий собой объединение двух векторов
 template<class Vector1, class Vector2>
-class VectorMerge;
+struct VectorUnion;
 
 template<bool has, class Vector1, class Vector2>
-class VectorMergeBool;
+struct VectorUnionBool;
 
 /// Если Type2 входит в Vector1 - просто убираем его
 template<class Vector1, typename Type2, typename... Types2>
-class VectorMergeBool<true, Vector1, Vector<Type2, Types2...>> : public VectorMerge<Vector1, Vector<Types2...>> { };
+struct VectorUnionBool<true, Vector1, Vector<Type2, Types2...>> : public VectorUnion<Vector1, Vector<Types2...>> { };
 
 template<class Vector, typename... Types> struct VectorPush;
 
 template<typename Type, typename... Types>
-struct VectorPush<Vector<Types...>, Type> : Vector<Type, Types...> {};
+struct VectorPush<Vector<Types...>, Type> { typedef Vector<Type, Types...> Result; };
 
 /// Если Type2 не входит в Vector1 - перекладываем
 template<class Vector1, typename Type2, typename... Types2>
-class VectorMergeBool<false, Vector1, Vector<Type2, Types2...>> : public VectorMerge<VectorPush<Vector1, Type2>, Vector<Types2...>> { };
+class VectorUnionBool<false, Vector1, Vector<Type2, Types2...>> : public VectorUnion<typename VectorPush<Vector1, Type2>::Result, Vector<Types2...>> { };
 
 template<class Vector1, typename Type2, typename... Types2>
-class VectorMerge<Vector1, Vector<Type2, Types2...>> : public VectorMergeBool<Vector1::template has<(Enum)Type2::tag>(), Vector1, Vector<Type2, Types2...>> { };
+struct VectorUnion<Vector1, Vector<Type2, Types2...>> : public VectorUnionBool<Vector1::template has<(Enum)Type2::tag>(), Vector1, Vector<Type2, Types2...>> { };
 
 template<class Vector1>
-class VectorMerge<Vector1, Vector<>> : public Vector1 { };
+class VectorUnion<Vector1, Vector<>> : public Vector1 { public: typedef Vector1 Result; };
 
 //-------------------------- get ------------------------------------------------------------------//
 /// Функция получения значения
@@ -110,44 +103,72 @@ constexpr typename FindItem<tag, Vector<Types...>>::Item & get(Vector<Types...> 
     return (((Vector&) vector).item.item);
 }
 
+/// Функция получения постоянного значения
+template<Enum tag, class... Types> inline
+constexpr const typename FindItem<tag, Vector<Types...>>::Item & get(const Vector<Types...> & vector)
+{
+    typedef typename FindItem<tag, Vector<Types...>>::Vector Vector;
+    return (((Vector&) vector).getItem());
+}
+
+
 /// Рекурсивная специализация вектора
 template<class Item, typename... Others>
-class Vector<Item, Others...> : private Vector<Others...>
+class Vector<Item, Others...> : public Vector<Others...>
 {
-    //inline
+protected:
+    template<class Other> inline void add(const Other & other)
+    {
+        Parent::add(other);
+        if(other.has<(Enum)Item::tag>())
+            item.item += get<Enum(Item::tag)>(other);
+    }
 public:
+    template<class Other1, class Other2> inline void sum(const Other1 & o1, const Other2 & o2)
+    {
+        Parent::sum(o1, o2);
+        const Enum e = (Enum) Item::tag;
+        static_assert(o1.has<e>() || o2.has<e>(), "Nothing to sum()");
+        if(o1.has<e>() && o2.has<e>()) item.item = get<e>(o1) + get<e>(o2);
+        else if(o1.has<e>()) item.item = get<e>(o1);
+        else item.item = get<e>(o2);
+    }
     typedef Vector<Others...> Parent;
     typedef Vector<Item, Others...> This;
     Item item;
-    constexpr typename Item::Item &getItem() { return item.item; }
+    constexpr typename Item::Item &getItem()
+    {
+        return item.item;
+    }
+    constexpr const typename Item::Item &getItem() const
+    {
+        return item.item;
+    }
 
     template<Enum tag> static constexpr bool has() { return (Enum) Item::tag == tag ? true : Parent::template has<tag>(); }
     template<class Other> static constexpr bool subsetOf() { return Other::template has<(Enum)Item::tag>() ? Parent::template subsetOf<Other>() : false; }
     template<class Other> static constexpr bool subsetOf(const Other &) { return This::template subsetOf<Other>(); }
-    //template<Enum tag> constexpr Item &get() { return
 
-    /*template<Enum tag, class... Types> inline
-    constexpr const typename FindItem<tag, Vector<Types...>>::Item & get() const
+    template<Enum tag, class... Types> inline
+    constexpr const typename FindItem<tag, Vector<Types...>>::Item & _get() const
     {
         typedef typename FindItem<tag, Vector<Types...>>::Vector Vector;
-        return (((Vector&) *this).item);
-    }*/
+        const Vector * t = this;
+        return t->item.item;
+    }
 
     template<class Other>
     Vector<Item, Others...> & operator += (const Other & other)
     {
-        //static_assert(Other::template subsetOf<This>(), "Unable to add");
-        Vector<Others...>::operator +=(other);
-        if(other.has<(Enum)Item::tag>())
-            item.item += get<Enum(Item::tag)>(other);
+        static_assert(Other::template subsetOf<This>(), "Unable to add");
+        add(other);
         return *this;
     }
     template<class Other>
-    inline VectorMerge<This, Other> operator + (const Other & other) const
+    inline typename VectorUnion<This, Other>::Result operator + (const Other & other) const
     {
-        VectorMerge<This, Other> result;
-
-        //if()
+        typename VectorUnion<This, Other>::Result result;
+        result.sum(*this, other);
         return result;
     }
 };
