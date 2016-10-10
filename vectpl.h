@@ -46,7 +46,7 @@ template<bool found, Enum tag, class Item> struct FindItemBool;
 template<Enum tag>
 struct FindItem<tag, Vector<>>
 {
-    typedef Vector<> Vector;
+    typedef Vector<> _Vector;
     typedef int Item;
 };
 
@@ -58,7 +58,7 @@ struct FindItemBool<false, tag, Vector<ItemT, Others...>> : public FindItem<tag,
 template<Enum tag, class ItemT, class... Others>
 struct FindItemBool<true, tag, Vector<ItemT, Others...>>
 {
-    typedef Vector<ItemT, Others...> Vector;
+    typedef Vector<ItemT, Others...> _Vector;
     typedef typename ItemT::Item Item;
 };
 
@@ -99,7 +99,7 @@ class VectorUnion<Vector1, Vector<>> : public Vector1 { public: typedef Vector1 
 template<Enum tag, class... Types> inline
 constexpr typename FindItem<tag, Vector<Types...>>::Item & get(Vector<Types...> & vector)
 {
-    typedef typename FindItem<tag, Vector<Types...>>::Vector Vector;
+    typedef typename FindItem<tag, Vector<Types...>>::_Vector Vector;
     return (((Vector&) vector).getItem());
 }
 
@@ -107,7 +107,7 @@ constexpr typename FindItem<tag, Vector<Types...>>::Item & get(Vector<Types...> 
 template<Enum tag, class... Types> inline
 constexpr const typename FindItem<tag, Vector<Types...>>::Item & get(const Vector<Types...> & vector)
 {
-    typedef typename FindItem<tag, Vector<Types...>>::Vector Vector;
+    typedef typename FindItem<tag, Vector<Types...>>::_Vector Vector;
     return (((Vector&) vector).getItem());
 }
 

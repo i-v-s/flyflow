@@ -1,11 +1,21 @@
 project(flyflow-test)
 cmake_minimum_required(VERSION 2.8)
 
-set(CMAKE_MODULE_PATH ${CMAKE_MODULE_PATH} ../cmake/)
+ADD_DEFINITIONS(-std=c++14)
 
-find_package(GTEST REQUIRED)
-find_package(OpenCV REQUIRED)
-find_package(Eigen3 REQUIRED)
+#set(CMAKE_MODULE_PATH ${CMAKE_MODULE_PATH} ../cmake/)
+
+if(NOT ${GTEST_FOUND})
+    find_package(GTEST REQUIRED)
+endif()
+
+if(NOT EIGEN3_INCLUDE_DIR)
+    find_package(Eigen3 REQUIRED)
+endif()
+
+#message( STATUS "EIGEN3_INCLUDE_DIR: " ${EIGEN3_FOUND})
+
+#find_package(OpenCV)
 
 include_directories(
 	${GTEST_INCLUDE_DIR}
@@ -13,16 +23,31 @@ include_directories(
 	${EIGEN3_INCLUDE_DIR}
 )
 
-ADD_DEFINITIONS(-std=c++11)
-
-add_executable(flyflow_test test.cpp 
-	../conveyor.cpp 
-	../frame.cpp 
-	../visualizer.cpp 
-	../jacobi.cpp
-	../normdist.cpp ../normdist.h
-	../kalman.cpp ../kalman.h
+set(SOURCES test.cpp
+            ../normdist.cpp     ../normdist.h
+            ../kalman.cpp       ../kalman.h
+            ../sequenceloop.cpp ../sequenceloop.h
+            ../timefusion.cpp
+            ../sequencestd.cpp
+            ../ellipsoidcalibrator.cpp
+            ../imu.cpp
+            ../imukalman.cpp
+            ../vectpl.cpp
 )
 
-target_link_libraries(flyflow_test ${GTEST_LIBRARIES} ${OpenCV_LIBS})
+if(OpenCV_FOUND)
+    set(SOURCES ${SOURCES}
+        ../conveyor.cpp
+        ../frame.cpp
+        ../visualizer.cpp
+        ../jacobi.cpp
+
+
+    )
+endif()
+
+add_executable(flyflow_test ${SOURCES})
+
+
+target_link_libraries(flyflow_test ${GTEST_LIBRARIES} ${OpenCV_LIBS} pthread)
 #set_property(TARGET flyflow_test PROPERTY CXX_STANDARD 14)
