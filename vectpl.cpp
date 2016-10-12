@@ -13,8 +13,18 @@ enum Enum
 
 TEST(vtpVectorTest, basic)
 {
-    vtp::Vector<vtp::Tag<Velocity, double>, vtp::Tag<Position, int>, vtp::Tag<Attitude, std::string>> v1;
+    typedef vtp::Vector<vtp::Tag<Velocity, double>, vtp::Tag<Position, int>, vtp::Tag<Attitude, std::string>> V1;
+    static_assert(V1::size() == 3, "Vector::size() error");
+    static_assert(V1::has<Attitude>(), "Vector::has() error");
+    static_assert(!V1::has<Height>(), "Vector::has() error");
+    typedef typename vtp::Reverse<V1>::Result RV1;
+    static_assert(RV1::size() == 3, "Vector::size() error");
+    static_assert(RV1::has<Attitude>(), "Vector::has() error");
+    static_assert(!RV1::has<Height>(), "Vector::has() error");
+
+    V1 v1;
     EXPECT_TRUE(v1.has<Attitude>());
+
     vtp::Vector<vtp::Tag<Velocity, double>, vtp::Tag<Attitude, std::string>> v2;
     vtp::Vector<vtp::Tag<Position, int>, vtp::Tag<Attitude, std::string>, vtp::Tag<Velocity, double>> v3;
     vtp::get<Velocity>(v1) = 1.4;
@@ -66,13 +76,46 @@ TEST(vtpVectorTest, vectorUnion)
 {
     using namespace vtp;
     typedef Vector<vtp::Tag<Velocity, double>> V1;
+    static_assert(V1::size() == 1, "Vector::size() error");
     static_assert(V1::template subsetOf<V1>(), "subset error");
     typedef Vector<vtp::Tag<Attitude, std::string>> V2;
+    static_assert(V1::size() == 1, "Vector::size() error");
     static_assert(!V1::template subsetOf<V2>(), "subset error");
-    typedef VectorUnion<V1, V2> V3;
+    typedef typename UnionT<V1, V2>::Result V3;
     static_assert(V1::template subsetOf<V3>(), "subset error");
     static_assert(V2::template subsetOf<V3>(), "subset error");
     static_assert(!V3::template subsetOf<V1>(), "subset error");
+    static_assert(V3::size() == 2, "Vector::size() error");
+    typedef Union(V1, V3) V4;
+    static_assert(V4::size() == 2, "Vector::size() error");
+
+    typedef Union(V3, V1) V5;
+    static_assert(V5::size() == 2, "Vector::size() error");
+}
+
+TEST(vtpVectorTest, matrixUnion)
+{
+    using namespace vtp;
+    typedef Matrix<
+            Tag<Velocity, Vector<Tag<Velocity, double>, Tag<Position, double>>>,
+            Tag<Position, Vector<Tag<Velocity, double>>>
+    > M1;
+    typedef Matrix<
+            Tag<Velocity, Vector<Tag<Velocity, double>, Tag<Position, double>>>,
+            Tag<Position, Vector<Tag<Velocity, double>, Tag<Position, double>>>
+    > M2;
+
+    typedef MatrixUnion<M1, M2>::Result M3;
+    static_assert(M1::template subsetOf<M3>(), "subset error");
+    static_assert(M2::template subsetOf<M3>(), "subset error");
+    static_assert(M3::template subsetOf<M2>(), "subset error");
+    static_assert(M3::template subsetOf<M1>(), "subset error");
+    typedef typename FindItemT<Position, typename M3::Parent>::Item M3Pos;
+    static_assert(M3Pos::has<Velocity>(), "M3Pos");
+    static_assert(M3Pos::has<Position>(), "M3Pos");
+    static_assert(!M3Pos::has<Height>(), "M3Pos");
+
+    //typedef Vector
 }
 
 TEST(vtpMatrixTest, basic)
