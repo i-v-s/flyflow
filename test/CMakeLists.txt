@@ -5,7 +5,7 @@ ADD_DEFINITIONS(-std=c++14)
 
 #set(CMAKE_MODULE_PATH ${CMAKE_MODULE_PATH} ../cmake/)
 
-if(NOT ${GTEST_FOUND})
+if(NOT GTEST_INCLUDE_DIR)
     find_package(GTEST REQUIRED)
 endif()
 

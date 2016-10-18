@@ -54,6 +54,32 @@ template<typename... Types> struct Reverse<Vector<Types...>>
     typedef typename ToLeft<Vector<>, Vector<Types...>>::Result Result;
 };
 
+//-------------------------- MakeVectorTranspose -------------------------------------------------------------//
+
+template<class Dst, class Src, Enum tag> struct MakeVectorTranspose;
+
+template<class... Dst, typename Item, class... Src, Enum tag>
+struct MakeVectorTranspose<
+            Vector<Dst...>,
+            Vector<Item, Src...>,
+            tag
+        > : public MakeVectorTranspose<
+            Vector<
+                Dst...,
+                Tag<
+                    (Enum)Item::tag,
+                    Vector<Tag<tag, typename Item::Item>>
+                >
+            >,
+            Vector<Src...>,
+            tag
+        > {};
+
+template<class... Dst, Enum tag>
+struct MakeVectorTranspose<Vector<Dst...>, Vector<>, tag>
+{
+    typedef Vector<Dst...> Result;
+};
 
 //-------------------------- FindItem ------------------------------------------------------------------//
 
@@ -117,27 +143,26 @@ struct VectorPush<Vector<Types...>, None> { typedef Vector<Types...> Result; };
 template<class Vector, typename Type, typename Caution> struct VectorPushIfNone;
 
 template<typename Type, typename... Types>
-struct VectorPushIfNone<Vector<Types...>, Type, None> { typedef Vector<Type, Types...> Result; };
+struct VectorPushIfNone<Vector<Types...>, Type, None> { typedef Vector<Types..., Type> Result; };
 
 template<typename Type, typename... Types, typename Caution>
 struct VectorPushIfNone<Vector<Types...>, Type, Caution> { typedef Vector<Types...> Result; };
 
+template<class DstVector, class SrcVector, class MergeVector> struct VectorMergeLeft;
 
-template<class DstVector, class SrcVector, class MergeVector> struct VectorMergeAdd;
-
-template<typename... Dst, typename Type, typename... Src, typename... Mrg>
-struct VectorMergeAdd<
+template<typename... Dst, typename Type, typename... Src, typename Mrg>
+struct VectorMergeLeft<
             Vector<Dst...>,
             Vector<Type, Src...>,
-            Vector<Mrg...>
-        > : public VectorMergeAdd<
-            Vector<TagUnion(Type::tag, typename Type::Item, FindItem(Type::tag, Vector<Mrg...>)), Dst...>,
+            Mrg
+        > : public VectorMergeLeft<
+            Vector<Dst..., TagUnion(Type::tag, typename Type::Item, FindItem(Type::tag, Mrg))>,
             Vector<Src...>,
-            Vector<Mrg...>
+            Mrg
         > {};
 
-template<typename... Dst, typename... Mrg>
-struct VectorMergeAdd<Vector<Dst...>, Vector<>, Vector<Mrg...>>
+template<typename... Dst, typename Mrg>
+struct VectorMergeLeft<Vector<Dst...>, Vector<>, Mrg>
 {
     typedef Vector<Dst...> Result;
 };
@@ -162,14 +187,14 @@ struct VectorAbsentAdd<Vector<Dst...>, Vector<>>
 template<typename... Types1, typename... Types2>
 struct UnionT<Vector<Types1...>, Vector<Types2...>>
 {
-    typedef typename VectorMergeAdd<
+    typedef typename VectorMergeLeft<
         Vector<>,
-        typename Reverse<Vector<Types1...>>::Result,
+        Vector<Types1...>,
         Vector<Types2...>
     >::Result MergeResult;
     typedef typename VectorAbsentAdd<
         MergeResult,
-        typename Reverse<Vector<Types2...>>::Result
+        Vector<Types2...>
     >::Result Result;
 };
 
@@ -275,6 +300,7 @@ public:
 
 template<typename... Vectors> class Matrix;
 template<typename... Vectors> class MatrixDef;
+template<class Dst, class Src> struct MakeMatrixTranspose;
 
 template<typename... Vectors> struct MatrixDef<Vector<Vectors...>>
 {
@@ -282,28 +308,28 @@ template<typename... Vectors> struct MatrixDef<Vector<Vectors...>>
 };
 
 /// Класс, выполняющий объединение двух матриц
-template<class Matrix1, class Matrix2> struct MatrixUnion
+template<class... Vectors1, class Matrix2> struct UnionT<Matrix<Vectors1...>, Matrix2>
 {
-    typedef typename MatrixDef<typename UnionT<typename Matrix1::Parent, typename Matrix2::Parent>::Result>::Result Result;
+    typedef typename MatrixDef<typename UnionT<typename Matrix<Vectors1...>::Vectors, typename Matrix2::Vectors>::Result>::Result Result;
 };
 
-template<typename... Vectors>
-class Matrix : public Vector<Vectors...>
+template<typename... VectorsT>
+class Matrix : public Vector<VectorsT...>
 {
 public:
-    typedef Vector<Vectors...> Parent;
-    typedef Matrix<Vectors...> This;
+    typedef Vector<VectorsT...> Vectors;
+    typedef Matrix<VectorsT...> This;
     template<class Other>
-    inline typename MatrixUnion<This, Other>::Result operator + (const Other & other) const
+    inline typename UnionT<This, Other>::Result operator + (const Other & other) const
     {
-        typename MatrixUnion<This, Other>::Result result;
-        result.sum((const Parent &)*this, (const typename Other::Parent &)other);
+        typename UnionT<This, Other>::Result result;
+        result.sum((const Vectors &)*this, (const typename Other::Vectors &)other);
         return result;
     }
     template<class Other>
-    Matrix<Vectors...> operator * (const Other & other) const
+    Matrix<VectorsT...> operator * (const Other & other) const
     {
-        Matrix<Vectors...> result;
+        Matrix<VectorsT...> result;
 
         return result;
     }
@@ -311,23 +337,41 @@ public:
 
 /// Функция получения значения из матрицы
 
-template<Enum tag1, Enum tag2, class... Vectors> inline
-constexpr auto & get(Matrix<Vectors...> & matrix)
+template<Enum tag1, Enum tag2, class... VectorsT> inline
+constexpr auto & get(Matrix<VectorsT...> & matrix)
 {
-    auto &vector = get<tag1>((typename Matrix<Vectors...>::Parent &)matrix);
+    auto &vector = get<tag1>((typename Matrix<VectorsT...>::Vectors &)matrix);
     return get<tag2>(vector);
 }
 
-template<Enum tag1, Enum tag2, class... Vectors> inline
-constexpr const auto & get(const Matrix<Vectors...> & matrix)
+template<Enum tag1, Enum tag2, class... VectorsT> inline
+constexpr const auto & get(const Matrix<VectorsT...> & matrix)
 {
-    const auto &vector = get<tag1>((const typename Matrix<Vectors...>::Parent &)matrix);
+    const auto &vector = get<tag1>((const typename Matrix<VectorsT...>::Vectors &)matrix);
     return get<tag2>(vector);
 }
 
+//-------------------------- MakeMatrixTranspose -------------------------------------------------------------//
+
+template<class DstMatrix, typename Item, class... Src>
+struct MakeMatrixTranspose<
+            DstMatrix,
+            Matrix<Item, Src...>
+        > : public MakeMatrixTranspose<
+            typename UnionT<
+                DstMatrix,
+                typename MatrixDef<typename MakeVectorTranspose<Vector<>, typename Item::Item, (Enum)Item::tag>::Result>::Result
+            >::Result,
+            Matrix<Src...>
+        > {};
+
+template<class DstMatrix>
+struct MakeMatrixTranspose<DstMatrix, Matrix<>>
+{
+    typedef DstMatrix Result;
+};
 
 }
-
 /* Regexp
  *  vtp::Tag<\(Enum\)(\d)u, (\l+)>
  *  $1:$2

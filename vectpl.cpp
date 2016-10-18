@@ -82,6 +82,8 @@ TEST(vtpVectorTest, vectorUnion)
     static_assert(V1::size() == 1, "Vector::size() error");
     static_assert(!V1::template subsetOf<V2>(), "subset error");
     typedef typename UnionT<V1, V2>::Result V3;
+    static_assert(V3::has<Velocity>(), "Union<> error");
+    static_assert(V3::has<Attitude>(), "Union<> error");
     static_assert(V1::template subsetOf<V3>(), "subset error");
     static_assert(V2::template subsetOf<V3>(), "subset error");
     static_assert(!V3::template subsetOf<V1>(), "subset error");
@@ -105,7 +107,7 @@ TEST(vtpVectorTest, matrixUnion)
             Tag<Position, Vector<Tag<Velocity, double>, Tag<Position, double>>>
     > M2;
 
-    typedef MatrixUnion<M1, M2>::Result M3;
+    typedef UnionT<M1, M2>::Result M3;
     static_assert(M1::template subsetOf<M3>(), "subset error");
     static_assert(M2::template subsetOf<M3>(), "subset error");
     static_assert(M3::template subsetOf<M2>(), "subset error");
@@ -151,6 +153,37 @@ TEST(vtpMatrixTest, basic)
     EXPECT_EQ(pv, 44.0);
     EXPECT_EQ(vp, 22.0);
     EXPECT_EQ(pp, 70.0);
+}
+
+TEST(vtpMatrix, makeTranspose)
+{
+    using namespace vtp;
+    typedef Matrix<
+        Tag<Velocity, Vector<                       Tag<Velocity, double>, Tag<Position, double>>>,
+        Tag<Position, Vector<Tag<Attitude, double>,                        Tag<Position, double>>>
+    > Mat;
+    typedef FindItem(Velocity, Mat::Vectors) VelVecHor;
+    typedef typename MakeVectorTranspose<Vector<>, VelVecHor, Velocity>::Result VelVecVer;
+    static_assert(VelVecVer::has<Velocity>(), "Matrix::has() error");
+    typedef FindItem(Position, VelVecVer) PVV;
+    static_assert(PVV::has<Velocity>(), "Matrix::has() error");
+    static_assert(VelVecVer::has<Position>(), "Matrix::has() error");
+    static_assert(!VelVecVer::has<Attitude>(), "Matrix::has() error");
+    static_assert(!VelVecVer::has<Height>(), "Matrix::has() error");
+
+    typedef FindItem(Position, Mat::Parent) PosVecHor;
+    typedef typename MakeVectorTranspose<Vector<>, PosVecHor, Position>::Result PosVecVer;
+    typedef typename UnionT<VelVecVer, PosVecVer>::Result Tr;
+    typedef typename VectorMergeLeft<Vector<>, VelVecVer, PosVecVer>::Result VML;
+
+    typedef typename UnionT<VelVecVer, PosVecVer>::Result R1;
+    typedef typename VectorAbsentAdd<VML, PosVecVer>::Result R;
+
+    typedef typename MakeMatrixTranspose<Matrix<>, Mat>::Result TMat;
+    //TMat::test;
+    static_assert(TMat::has<Attitude>(), "Matrix::has() error");
+    static_assert(TMat::has<Velocity>(), "Matrix::has() error");
+    static_assert(TMat::has<Position>(), "Matrix::has() error");
 }
 
 TEST(vtpMatrix, mul)
