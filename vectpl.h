@@ -48,38 +48,158 @@ struct ToLeft<Vector<Types1...>, Vector<Type2, Types2...>> : public ToLeft<Vecto
 template<typename... Types>
 struct ToLeft<Vector<Types...>, Vector<>> { typedef Vector<Types...> Result; };
 
-template<class Vector> struct Reverse;
-template<typename... Types> struct Reverse<Vector<Types...>>
+template<class Src>
+using Reverse = typename ToLeft<Vector<>, Src>::Result;
+
+//-------------------------- MaybePush ----------------------------------------------------------------//
+
+template<class Dst, class Item> struct MaybePushT;
+template<template<class...> class VectorT, typename... Dst> struct MaybePushT<VectorT<Dst...>, None>
 {
-    typedef typename ToLeft<Vector<>, Vector<Types...>>::Result Result;
+    typedef VectorT<Dst...> Result;
 };
+
+template<template<class...> class VectorT, typename... Dst, typename Item> struct MaybePushT<VectorT<Dst...>, Item>
+{
+    typedef VectorT<Dst..., Item> Result;
+};
+
+template<class Dst, class Item>
+using MaybePush = typename MaybePushT<Dst, Item>::Result;
+
+//-------------------------- Map ----------------------------------------------------------------------//
+
+template<class Dst, class Src, template<class...> class Transform, class... Params> struct MapT;
+
+template<template<class...> class VectorT, typename... Dst, typename Item, typename... Src, template<class...> class Transform, class... Params>
+struct MapT<
+        VectorT<Dst...>,
+        VectorT<Item, Src...>,
+        Transform, Params...
+    > : public MapT<
+        MaybePush<VectorT<Dst...>, Transform<Item, Params...>>,// VectorT<Dst..., Transform<Item, Params...>>,
+        VectorT<Src...>,
+        Transform, Params...
+    > {};
+
+template<template<class...> class VectorT, typename... Dst, template<class...> class Transform, class... Params>
+struct MapT<
+        VectorT<Dst...>,
+        VectorT<>,
+        Transform,
+        Params...
+    > { typedef VectorT<Dst...> Result; };
+
+template<class Src, template<class...> class Transform, class... Params> struct MapTHelper;
+
+template<template<class...> class VectorT, typename... Src, template<class...> class Transform, class... Params>
+struct MapTHelper<
+        VectorT<Src...>,
+        Transform,
+        Params...
+    > : public MapT<
+        VectorT<>,
+        VectorT<Src...>,
+        Transform,
+        Params...
+    > {};
+
+template<class VectorT, template<class...> class Transform, class... Params>
+using Map = typename MapTHelper<VectorT, Transform, Params...>::Result;
+
+//-------------------------- Fold ----------------------------------------------------------------------//
+template<class Dst, class Src, template<class...> class Transform, class... Params> struct FoldT;
+
+template<typename Dst, template<class...> class VectorT, typename Item, typename... Src, template<class...> class Transform, class... Params>
+struct FoldT<
+        Dst,
+        VectorT<Item, Src...>,
+        Transform, Params...
+    > : public FoldT<
+        Transform<Dst, Item, Params...>,
+        VectorT<Src...>,
+        Transform, Params...
+    > {};
+
+template<template<class...> class VectorT, typename Dst, template<class...> class Transform, class... Params>
+struct FoldT<
+        Dst,
+        VectorT<>,
+        Transform,
+        Params...
+    > { typedef Dst Result; };
+
+template<class Init, class VectorT, template<class...> class Transform, class... Params>
+using Fold = typename FoldT<Init, VectorT, Transform, Params...>::Result;
+
+//-------------------------- Find ----------------------------------------------------------------------------//
+
+template<typename Result, typename Array, template<class...> class Transform, class... Params> struct FindT;
+
+template<template<class...> class VectorT, typename Item, typename... Src, template<class...> class Transform, class... Params>
+struct FindT<
+        None,
+        VectorT<Item, Src...>,
+        Transform, Params...
+    > : public FindT<
+        Transform<Item, Params...>,
+        VectorT<Src...>,
+        Transform, Params...
+    > { };
+
+template<template<class...> class VectorT, typename Item, typename... Src, template<class...> class Transform, class... Params>
+struct FindT<
+        Item,
+        VectorT<Src...>,
+        Transform, Params...
+    > { typedef Item Result; };
+
+template<class Array, template<class...> class Transform, class... Params>
+using Find = typename FindT<None, Array, Transform, Params...>::Result;
+
+//--------------------------- GetContainerType ---------------------------------------------------------------//
+
+template<class Container> struct GetContainerTypeT;
+
+template<template<class...> class ContainerType, class... Items>
+struct GetContainerTypeT<ContainerType<Items...>> { template<class... Is> using Result = ContainerType<Is...>; };
+
+template<class Container>
+using GetContainerType = typename GetContainerTypeT<Container>::Result;
+
+//-------------------------- InnerJoin ------------------------------------------------------------//
+
+template<class V1, class V2, template<class...> class Join, class... Params>
+struct InnerJoinT
+{
+    template<class Item1, class Item2> struct FinderT { typedef None Result; };
+
+    template<Enum tag, class Item1, class Item2> struct FinderT<Tag<tag, Item1>, Tag<tag, Item2>>
+    {
+        typedef Tag<tag, Join<Item1, Item2, Params...>> Result;
+    };
+
+    template<class Item1, class Item2> using Finder = typename FinderT<Item1, Item2>::Result;
+
+    template<class Item>
+    using JFind = Find<V2, Finder, Item>;
+
+    using Result = Map<V1, JFind>;
+};
+
+template<class V1, class V2, template<class...> class Join, class... Params>
+using InnerJoin = typename InnerJoinT<V1, V2, Join, Params...>::Result;
 
 //-------------------------- MakeVectorTranspose -------------------------------------------------------------//
 
-template<class Dst, class Src, Enum tag> struct MakeVectorTranspose;
+template<class Item, class Param>
+using MakeItemTranspose = Tag<
+    (Enum)Item::tag,
+    Vector<Tag<(Enum)Param::tag, typename Item::Item>>
+>;
 
-template<class... Dst, typename Item, class... Src, Enum tag>
-struct MakeVectorTranspose<
-            Vector<Dst...>,
-            Vector<Item, Src...>,
-            tag
-        > : public MakeVectorTranspose<
-            Vector<
-                Dst...,
-                Tag<
-                    (Enum)Item::tag,
-                    Vector<Tag<tag, typename Item::Item>>
-                >
-            >,
-            Vector<Src...>,
-            tag
-        > {};
-
-template<class... Dst, Enum tag>
-struct MakeVectorTranspose<Vector<Dst...>, Vector<>, tag>
-{
-    typedef Vector<Dst...> Result;
-};
+template<class VectorT, Enum tag>
+using MakeVectorTranspose = Map<VectorT, MakeItemTranspose, Tag<tag, None>>;
 
 //-------------------------- FindItem ------------------------------------------------------------------//
 
@@ -115,6 +235,7 @@ template<Enum tag, class ItemT, class... Others>
 struct FindItemT<tag, Vector<ItemT, Others...>> :
         public FindItemBool<tag == ItemT::tag, tag, Vector<ItemT, Others...>> { };
 
+
 #define FindItem(tag, vec) typename FindItemT<(Enum)tag, vec>::Item
 
 //-------------------------- Union ------------------------------------------------------------------//
@@ -123,7 +244,8 @@ struct FindItemT<tag, Vector<ItemT, Others...>> :
 template<typename Class1, typename Class2>
 struct UnionT;
 
-#define Union(a, b) typename UnionT<a, b>::Result
+template<typename Class1, typename Class2>
+using Union = typename UnionT<Class1, Class2>::Result;
 #define TagUnion(t, a, b) Tag<(Enum)t, typename UnionT<a, b>::Result>
 
 //template<typename T> struct Union<T, T> { typedef T Result; };
@@ -131,6 +253,7 @@ struct UnionT;
 template<> struct UnionT<double, double> { typedef double Result; };
 template<> struct UnionT<int, int> { typedef int Result; };
 template<class T> struct UnionT<T, None> { typedef T Result; };
+template<class T> struct UnionT<None, T> { typedef T Result; };
 
 template<class Vector, typename... Types> struct VectorPush;
 
@@ -300,7 +423,7 @@ public:
 
 template<typename... Vectors> class Matrix;
 template<typename... Vectors> class MatrixDef;
-template<class Dst, class Src> struct MakeMatrixTranspose;
+template<class Dst, class Src> struct MakeMatrixTransposeT;
 
 template<typename... Vectors> struct MatrixDef<Vector<Vectors...>>
 {
@@ -354,24 +477,46 @@ constexpr const auto & get(const Matrix<VectorsT...> & matrix)
 //-------------------------- MakeMatrixTranspose -------------------------------------------------------------//
 
 template<class DstMatrix, typename Item, class... Src>
-struct MakeMatrixTranspose<
+struct MakeMatrixTransposeT<
             DstMatrix,
             Matrix<Item, Src...>
-        > : public MakeMatrixTranspose<
+        > : public MakeMatrixTransposeT<
             typename UnionT<
                 DstMatrix,
-                typename MatrixDef<typename MakeVectorTranspose<Vector<>, typename Item::Item, (Enum)Item::tag>::Result>::Result
+                typename MatrixDef<MakeVectorTranspose<typename Item::Item, (Enum)Item::tag>>::Result
             >::Result,
             Matrix<Src...>
         > {};
 
 template<class DstMatrix>
-struct MakeMatrixTranspose<DstMatrix, Matrix<>>
+struct MakeMatrixTransposeT<DstMatrix, Matrix<>>
 {
     typedef DstMatrix Result;
 };
 
+template<class MatrixT>
+using MatrixTranspose = typename MakeMatrixTransposeT<Matrix<>, MatrixT>::Result;
+
+//------------------------- Mul --------------------------------------
+
+template<class A, class B>
+using Sum = Union<A, B>;
+
+template<class A, class B>
+using Mul = Union<A, B>;
+
+template<class V1, class V2>
+using VecVecMul = Fold<None, InnerJoin<V1, V2, Mul>, Sum>; // Делаем сложение
+
+/*template<class V1, class M2T>
+using VecMatMul = Tag<V1::tag, Map<M2T, VecVecMul, typename V1::Item>>; // Произведение вектора на матрицу
+
+template<class M1, class M2>
+using MatrixMul = Map<M1, VecMatMul, MatrixTranspose<M2>>; // Произведение матриц
+*/
+
 }
+
 /* Regexp
  *  vtp::Tag<\(Enum\)(\d)u, (\l+)>
  *  $1:$2

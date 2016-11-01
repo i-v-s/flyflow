@@ -10,6 +10,7 @@ enum Enum
 };
 
 #include "vectpl.h"
+#include "tuples.h"
 
 TEST(vtpVectorTest, basic)
 {
@@ -17,7 +18,7 @@ TEST(vtpVectorTest, basic)
     static_assert(V1::size() == 3, "Vector::size() error");
     static_assert(V1::has<Attitude>(), "Vector::has() error");
     static_assert(!V1::has<Height>(), "Vector::has() error");
-    typedef typename vtp::Reverse<V1>::Result RV1;
+    typedef vtp::Reverse<V1> RV1;
     static_assert(RV1::size() == 3, "Vector::size() error");
     static_assert(RV1::has<Attitude>(), "Vector::has() error");
     static_assert(!RV1::has<Height>(), "Vector::has() error");
@@ -88,10 +89,10 @@ TEST(vtpVectorTest, vectorUnion)
     static_assert(V2::template subsetOf<V3>(), "subset error");
     static_assert(!V3::template subsetOf<V1>(), "subset error");
     static_assert(V3::size() == 2, "Vector::size() error");
-    typedef Union(V1, V3) V4;
+    typedef Union<V1, V3> V4;
     static_assert(V4::size() == 2, "Vector::size() error");
 
-    typedef Union(V3, V1) V5;
+    typedef Union<V3, V1> V5;
     static_assert(V5::size() == 2, "Vector::size() error");
 }
 
@@ -163,7 +164,7 @@ TEST(vtpMatrix, makeTranspose)
         Tag<Position, Vector<Tag<Attitude, double>,                        Tag<Position, double>>>
     > Mat;
     typedef FindItem(Velocity, Mat::Vectors) VelVecHor;
-    typedef typename MakeVectorTranspose<Vector<>, VelVecHor, Velocity>::Result VelVecVer;
+    typedef MakeVectorTranspose<VelVecHor, Velocity> VelVecVer;
     static_assert(VelVecVer::has<Velocity>(), "Matrix::has() error");
     typedef FindItem(Position, VelVecVer) PVV;
     static_assert(PVV::has<Velocity>(), "Matrix::has() error");
@@ -172,14 +173,14 @@ TEST(vtpMatrix, makeTranspose)
     static_assert(!VelVecVer::has<Height>(), "Matrix::has() error");
 
     typedef FindItem(Position, Mat::Parent) PosVecHor;
-    typedef typename MakeVectorTranspose<Vector<>, PosVecHor, Position>::Result PosVecVer;
+    typedef MakeVectorTranspose<PosVecHor, Position> PosVecVer;
     typedef typename UnionT<VelVecVer, PosVecVer>::Result Tr;
     typedef typename VectorMergeLeft<Vector<>, VelVecVer, PosVecVer>::Result VML;
 
     typedef typename UnionT<VelVecVer, PosVecVer>::Result R1;
     typedef typename VectorAbsentAdd<VML, PosVecVer>::Result R;
 
-    typedef typename MakeMatrixTranspose<Matrix<>, Mat>::Result TMat;
+    typedef MatrixTranspose<Mat> TMat;
     //TMat::test;
     static_assert(TMat::has<Attitude>(), "Matrix::has() error");
     static_assert(TMat::has<Velocity>(), "Matrix::has() error");
@@ -189,9 +190,17 @@ TEST(vtpMatrix, makeTranspose)
 TEST(vtpMatrix, mul)
 {
     using namespace vtp;
-    Matrix<
+    using V1 = Vector<Tag<Velocity, int>, Tag<Attitude, double>>;
+    using V2 = Vector<Tag<Velocity, int>, Tag<Height, double>>;
+    VecVecMul<V1, V2> t;
+
+    //t.rt;
+
+    typedef Matrix<
             Tag<Velocity, Vector<Tag<Velocity, double>, Tag<Position, double>>>,
             Tag<Position, Vector<Tag<Velocity, double>, Tag<Position, double>>>
-            > mat2;
-    auto mat3 = mat2 * mat2;
+            > Mat2;
+    /*typedef MatrixMul<Mat2, Mat2> M;
+    Mat2 mat2;
+    auto mat3 = mat2 * mat2;*/
 }
